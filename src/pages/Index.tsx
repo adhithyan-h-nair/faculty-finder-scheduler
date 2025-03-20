@@ -34,11 +34,9 @@ const Index = () => {
   const updateData = () => {
     // In a real app, this would be an API call
     setLoading(true);
-    setTimeout(() => {
-      const counts = getFacultyStatusCounts();
-      setStatusCounts(counts);
-      setLoading(false);
-    }, 300);
+    const counts = getFacultyStatusCounts();
+    setStatusCounts(counts);
+    setLoading(false);
   };
 
   useEffect(() => {
