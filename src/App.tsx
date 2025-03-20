@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Faculty from "./pages/Faculty";
 import Timetable from "./pages/Timetable";
 import NotFound from "./pages/NotFound";
+import Header from "./components/layout/Header";
 
 const queryClient = new QueryClient();
 
@@ -17,8 +18,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Header />
         <Routes>
-          <Route path="/" element={<Navigate to="/faculty" replace />} />
+          <Route path="/" element={<Index />} />
           <Route path="/faculty" element={<Faculty />} />
           <Route path="/timetable" element={<Timetable />} />
           <Route path="*" element={<NotFound />} />

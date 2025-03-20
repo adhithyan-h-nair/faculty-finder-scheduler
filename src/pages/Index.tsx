@@ -6,8 +6,9 @@ import StatusOverview from '@/components/dashboard/StatusOverview';
 import FacultyCard from '@/components/faculty/FacultyCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { getFacultyStatusCounts, facultyData } from '@/lib/data';
-import { Users, Calendar, AlertTriangle } from 'lucide-react';
+import { Users, Calendar, AlertTriangle, PieChart, BarChart } from 'lucide-react';
 import { StatusCount } from '@/lib/types';
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
     substituted: 0
   });
   const [loading, setLoading] = useState(true);
+  const [chartType, setChartType] = useState("pie");
 
   // Get faculty who need attention (absent without substitute)
   const facultyNeedingAttention = facultyData.filter(f => 
@@ -54,8 +56,20 @@ const Index = () => {
       </div>
 
       <div className="space-y-6">
+        {/* Chart Toggle */}
+        <div className="flex justify-end mb-4">
+          <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value)}>
+            <ToggleGroupItem value="pie" aria-label="Toggle Pie Chart">
+              <PieChart className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="bar" aria-label="Toggle Bar Chart">
+              <BarChart className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
         {/* Status Overview */}
-        <StatusOverview counts={statusCounts} />
+        <StatusOverview counts={statusCounts} chartType={chartType} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Faculty Needing Attention */}

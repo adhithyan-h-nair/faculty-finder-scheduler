@@ -24,6 +24,14 @@ const Header = () => {
     { path: '/timetable', label: 'Timetable', icon: <Calendar size={18} /> },
   ];
 
+  // Helper function to check if a path matches the current location
+  const isPathActive = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true;
+    if (path === '/faculty' && location.pathname.includes('/faculty')) return true;
+    if (path === '/timetable' && location.pathname.includes('/timetable')) return true;
+    return false;
+  };
+
   return (
     <header
       className={cn(
@@ -45,10 +53,10 @@ const Header = () => {
           {navItems.map((item) => (
             <Link key={item.path} to={item.path}>
               <Button
-                variant={location.pathname === item.path ? "default" : "ghost"}
+                variant={isPathActive(item.path) ? "default" : "ghost"}
                 className={cn(
                   "transition-all duration-300",
-                  location.pathname === item.path
+                  isPathActive(item.path)
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary"
                 )}
@@ -65,10 +73,10 @@ const Header = () => {
             <Link key={item.path} to={item.path}>
               <Button
                 size="icon"
-                variant={location.pathname === item.path ? "default" : "ghost"}
+                variant={isPathActive(item.path) ? "default" : "ghost"}
                 className={cn(
                   "transition-all duration-300",
-                  location.pathname === item.path
+                  isPathActive(item.path)
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary"
                 )}
