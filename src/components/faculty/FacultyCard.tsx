@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import { getFacultyById, updateFacultyStatus } from '@/lib/data';
-import { Mail, Phone, UserCheck, UserX, UserCog } from 'lucide-react';
+import { Mail, Phone, UserCheck, UserX, UserCog, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -161,6 +161,16 @@ const FacultyCard = ({
       
       {showControls && (
         <CardFooter className="pt-0 flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-blue-600 border-blue-300"
+            onClick={() => onEdit(faculty)}
+          >
+            <Pencil size={16} className="mr-1" />
+            Edit Details
+          </Button>
+          
           {faculty.status === 'available' && (
             <Button
               variant="outline"
@@ -198,15 +208,6 @@ const FacultyCard = ({
               Mark Available
             </Button>
           )}
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(faculty)}
-          >
-            <UserCog size={16} className="mr-1" />
-            Edit
-          </Button>
         </CardFooter>
       )}
     </Card>
