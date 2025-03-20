@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '@/components/layout/PageContainer';
@@ -20,7 +19,7 @@ const Index = () => {
     substituted: 0
   });
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState("pie");
+  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
 
   // Get faculty who need attention (absent without substitute)
   const facultyNeedingAttention = facultyData.filter(f => 
@@ -58,7 +57,7 @@ const Index = () => {
       <div className="space-y-6">
         {/* Chart Toggle */}
         <div className="flex justify-end mb-4">
-          <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value)}>
+          <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value as 'pie' | 'bar')}>
             <ToggleGroupItem value="pie" aria-label="Toggle Pie Chart">
               <PieChart className="h-4 w-4" />
             </ToggleGroupItem>
