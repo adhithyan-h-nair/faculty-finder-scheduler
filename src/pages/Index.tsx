@@ -34,13 +34,22 @@ const Index = () => {
   const updateData = () => {
     // In a real app, this would be an API call
     setLoading(true);
-    const counts = getFacultyStatusCounts();
-    setStatusCounts(counts);
-    setLoading(false);
+    try {
+      const counts = getFacultyStatusCounts();
+      setStatusCounts(counts);
+    } catch (error) {
+      console.error("Error loading faculty data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
+    // Ensure data is loaded on mount
     updateData();
+    
+    // Add debug logging
+    console.log("Index component mounted");
   }, []);
 
   return (
@@ -55,7 +64,15 @@ const Index = () => {
       <div className="space-y-6">
         {/* Chart Toggle */}
         <div className="flex justify-end mb-4">
-          <ToggleGroup type="single" value={chartType} onValueChange={(value) => value && setChartType(value as 'pie' | 'bar')}>
+          <ToggleGroup 
+            type="single" 
+            value={chartType} 
+            onValueChange={(value) => {
+              if (value === 'pie' || value === 'bar') {
+                setChartType(value);
+              }
+            }}
+          >
             <ToggleGroupItem value="pie" aria-label="Toggle Pie Chart">
               <PieChart className="h-4 w-4" />
             </ToggleGroupItem>
@@ -92,7 +109,7 @@ const Index = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 staggered-animation">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {facultyNeedingAttention.map(faculty => (
                     <FacultyCard 
                       key={faculty.id} 
@@ -158,7 +175,7 @@ const Index = () => {
               <CardTitle className="text-lg">Recent Substitutions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 staggered-animation">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {recentSubstitutions.map(faculty => (
                   <FacultyCard 
                     key={faculty.id} 

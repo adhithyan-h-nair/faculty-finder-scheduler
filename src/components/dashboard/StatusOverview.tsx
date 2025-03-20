@@ -49,10 +49,19 @@ const StatusOverview = ({ counts, className, chartType = 'pie' }: StatusOverview
 
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
 
-  // Prepare data for charts
-  const chartData = statusItems.map(item => ({
+  // Prepare data for charts - ensure it's not empty
+  const chartData = statusItems
+    .filter(item => item.count > 0) // Only include non-zero values
+    .map(item => ({
+      name: item.label,
+      value: item.count,
+      color: item.color
+    }));
+
+  // If all values are 0, create placeholder data
+  const displayData = chartData.length > 0 ? chartData : statusItems.map(item => ({
     name: item.label,
-    value: item.count,
+    value: 0,
     color: item.color
   }));
 
@@ -69,7 +78,6 @@ const StatusOverview = ({ counts, className, chartType = 'pie' }: StatusOverview
                 key={item.label}
                 className={cn(
                   "flex flex-col items-center justify-center p-3 rounded-lg border",
-                  "transition-all duration-300 animate-fade-in",
                   item.bgClass
                 )}
               >
@@ -101,33 +109,37 @@ const StatusOverview = ({ counts, className, chartType = 'pie' }: StatusOverview
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={chartData}
+                    data={displayData}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => 
+                      percent ? `${name} ${(percent * 100).toFixed(0)}%` : name
+                    }
                     labelLine={false}
                   >
-                    {chartData.map((entry, index) => (
+                    {displayData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip 
                     formatter={(value) => [`${value} faculty`, 'Count']}
+                    isAnimationActive={false}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
+                <BarChart data={displayData}>
                   <XAxis dataKey="name" fontSize={12} />
                   <YAxis />
                   <Tooltip 
                     formatter={(value) => [`${value} faculty`, 'Count']}
+                    isAnimationActive={false}
                   />
-                  <Bar dataKey="value">
-                    {chartData.map((entry, index) => (
+                  <Bar dataKey="value" isAnimationActive={false}>
+                    {displayData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Bar>
