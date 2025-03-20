@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Faculty } from '@/lib/types';
+import { Faculty, FacultyStatus } from '@/lib/types';
 import { addFaculty } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,8 +67,17 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
           description: `${data.name} has been updated.`,
         });
       } else {
-        // Create new faculty
-        const newFaculty = addFaculty(data);
+        // Create new faculty with all required fields
+        // Ensure all required fields are present and explicitly type the object
+        const newFacultyData: Omit<Faculty, 'id'> = {
+          name: data.name,
+          department: data.department,
+          email: data.email,
+          status: data.status,
+          phone: data.phone
+        };
+        
+        const newFaculty = addFaculty(newFacultyData);
         console.log("New faculty created:", newFaculty);
         toast({
           title: "Faculty Added",
