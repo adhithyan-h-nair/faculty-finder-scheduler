@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getFacultyById } from '@/lib/data';
+import { facultyData, getFacultyById } from '@/lib/data';
 
 interface TimetableEditDialogProps {
   open: boolean;
@@ -35,8 +35,13 @@ const TimetableEditDialog = ({
     day: selectedDay,
     periodNumber: 1,
     startTime: '08:00',
-    endTime: '08:50'
+    endTime: '08:50',
+    location: '',
+    facultyId: facultyId,
+    substituteFacultyId: ''
   });
+
+  const [isSubstitute, setIsSubstitute] = useState(false);
 
   useEffect(() => {
     if (period) {
@@ -46,8 +51,12 @@ const TimetableEditDialog = ({
         day: period.day,
         periodNumber: period.periodNumber,
         startTime: period.startTime,
-        endTime: period.endTime
+        endTime: period.endTime,
+        location: period.location || '',
+        facultyId: period.facultyId,
+        substituteFacultyId: period.originalFacultyId || ''
       });
+      setIsSubstitute(!!period.originalFacultyId);
     } else {
       // Default for new period
       setFormData({
@@ -56,10 +65,14 @@ const TimetableEditDialog = ({
         day: selectedDay,
         periodNumber: 1,
         startTime: '08:00',
-        endTime: '08:50'
+        endTime: '08:50',
+        location: '',
+        facultyId: facultyId,
+        substituteFacultyId: ''
       });
+      setIsSubstitute(false);
     }
-  }, [period, selectedDay]);
+  }, [period, selectedDay, facultyId]);
 
   const handleChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -94,7 +107,7 @@ const TimetableEditDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-white">
         <DialogHeader>
           <DialogTitle>{isNewPeriod ? 'Add New Period' : 'Edit Period'}</DialogTitle>
           <DialogDescription>
@@ -113,6 +126,7 @@ const TimetableEditDialog = ({
                 value={formData.courseCode}
                 onChange={(e) => handleChange('courseCode', e.target.value)}
                 placeholder="e.g. CS101"
+                className="bg-white"
               />
             </div>
             
@@ -123,6 +137,7 @@ const TimetableEditDialog = ({
                 value={formData.courseTitle}
                 onChange={(e) => handleChange('courseTitle', e.target.value)}
                 placeholder="e.g. Introduction to Programming"
+                className="bg-white"
               />
             </div>
           </div>
@@ -134,10 +149,10 @@ const TimetableEditDialog = ({
                 value={formData.day} 
                 onValueChange={(value) => handleChange('day', value)}
               >
-                <SelectTrigger id="day">
+                <SelectTrigger id="day" className="bg-white">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {days.map(day => (
                     <SelectItem key={day} value={day}>
                       {day}
@@ -153,10 +168,10 @@ const TimetableEditDialog = ({
                 value={formData.periodNumber.toString()} 
                 onValueChange={(value) => handleChange('periodNumber', parseInt(value))}
               >
-                <SelectTrigger id="periodNumber">
+                <SelectTrigger id="periodNumber" className="bg-white">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   {periodOptions.map(num => (
                     <SelectItem key={num} value={num.toString()}>
                       Period {num}
@@ -175,6 +190,7 @@ const TimetableEditDialog = ({
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => handleChange('startTime', e.target.value)}
+                className="bg-white"
               />
             </div>
             
@@ -185,8 +201,57 @@ const TimetableEditDialog = ({
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => handleChange('endTime', e.target.value)}
+                className="bg-white"
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="location">Location</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleChange('location', e.target.value)}
+              placeholder="e.g. Room 101, Building A"
+              className="bg-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="substitute"
+                checked={isSubstitute}
+                onChange={(e) => setIsSubstitute(e.target.checked)}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="substitute">This is a substitute period</Label>
+            </div>
+            
+            {isSubstitute && (
+              <div className="mt-2">
+                <Label htmlFor="substituteFaculty">Original Faculty</Label>
+                <Select 
+                  value={formData.substituteFacultyId} 
+                  onValueChange={(value) => handleChange('substituteFacultyId', value)}
+                >
+                  <SelectTrigger id="substituteFaculty" className="bg-white">
+                    <SelectValue placeholder="Select original faculty" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {facultyData
+                      .filter(f => f.id !== facultyId)
+                      .map(faculty => (
+                        <SelectItem key={faculty.id} value={faculty.id}>
+                          {faculty.name}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -194,7 +259,7 @@ const TimetableEditDialog = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} className="bg-primary text-white">
             {isNewPeriod ? 'Add Period' : 'Save Changes'}
           </Button>
         </div>

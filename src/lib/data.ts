@@ -93,6 +93,12 @@ const courses = [
   { code: "EE201", title: "Digital Electronics" },
 ];
 
+// Classroom locations
+const locations = [
+  "Room 101", "Room 102", "Room 103", "Room 201", "Room 202", 
+  "Lab A", "Lab B", "Lecture Hall 1", "Lecture Hall 2", "Seminar Room"
+];
+
 // Generate sample timetable data
 const days: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
@@ -118,6 +124,8 @@ export const generateTimetable = (facultyId: string): Period[] => {
       const period = periods[periodIndex];
       const courseIndex = Math.floor(Math.random() * courses.length);
       const course = courses[courseIndex];
+      const locationIndex = Math.floor(Math.random() * locations.length);
+      const location = locations[locationIndex];
       
       let periodData: Period = {
         id: `${facultyId}-${day}-${period.number}`,
@@ -127,7 +135,8 @@ export const generateTimetable = (facultyId: string): Period[] => {
         endTime: period.end,
         courseCode: course.code,
         courseTitle: course.title,
-        facultyId: facultyId
+        facultyId: facultyId,
+        location: location
       };
       
       // If faculty is substituted, add original faculty

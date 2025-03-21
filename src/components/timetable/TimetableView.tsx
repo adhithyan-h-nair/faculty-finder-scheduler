@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TimetableViewProps {
@@ -59,10 +59,10 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
   };
   
   return (
-    <div className={cn("w-full", className)}>
+    <div className={cn("w-full bg-white p-4 rounded-lg shadow-sm", className)}>
       <Tabs value={selectedDay} onValueChange={(value) => setSelectedDay(value as Day)}>
-        <div className="flex justify-between items-center mb-4">
-          <TabsList className="w-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+          <TabsList className="w-full sm:w-auto bg-slate-100">
             {days.map(day => (
               <TabsTrigger
                 key={day}
@@ -70,7 +70,8 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
                 disabled={periodsByDay[day].length === 0}
                 className={cn(
                   "relative transition-all duration-300",
-                  periodsByDay[day].length === 0 ? "opacity-40" : ""
+                  periodsByDay[day].length === 0 ? "opacity-40" : "",
+                  "data-[state=active]:bg-primary data-[state=active]:text-white"
                 )}
               >
                 {day}
@@ -86,7 +87,7 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
           <Button 
             size="sm" 
             onClick={handleAddPeriod}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             <Plus size={16} className="mr-1" />
             Add Period
@@ -101,8 +102,10 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
           >
             <div className="space-y-3">
               {periodsByDay[day].length === 0 ? (
-                <div className="py-8 text-center text-muted-foreground">
-                  No periods scheduled for {day}
+                <div className="py-8 text-center text-muted-foreground bg-slate-50 rounded-lg border border-slate-200">
+                  <Calendar className="w-10 h-10 mx-auto mb-2 text-slate-400" />
+                  <div className="font-medium">No periods scheduled for {day}</div>
+                  <div className="text-sm mt-1">Click "Add Period" to schedule a class</div>
                 </div>
               ) : (
                 <div className="staggered-animation">

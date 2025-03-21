@@ -37,8 +37,9 @@ const FacultyPage = () => {
   
   // Load faculty data
   useEffect(() => {
-    setFacultyList([...facultyData]);
-    setFilteredList([...facultyData]);
+    // Directly use the facultyData import
+    setFacultyList(facultyData);
+    setFilteredList(facultyData);
   }, []);
   
   // Handle filtering
@@ -77,6 +78,7 @@ const FacultyPage = () => {
   const handleFormSave = () => {
     // Refresh data - in real app, this would be an API call
     setFacultyList([...facultyData]);
+    setFilteredList([...facultyData]);
   };
   
   const statusOptions: { value: FacultyStatus | 'all', label: string }[] = [
@@ -97,7 +99,7 @@ const FacultyPage = () => {
           </p>
         </div>
         
-        <Button onClick={handleAddNew}>
+        <Button onClick={handleAddNew} className="bg-primary text-white">
           <UserPlus size={16} className="mr-2" />
           Add Faculty
         </Button>
@@ -109,7 +111,7 @@ const FacultyPage = () => {
           <Search size={16} className="absolute left-3 top-3 text-muted-foreground" />
           <Input
             placeholder="Search faculty..."
-            className="pl-9"
+            className="pl-9 bg-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -120,10 +122,10 @@ const FacultyPage = () => {
             value={statusFilter} 
             onValueChange={(value) => setStatusFilter(value as FacultyStatus | 'all')}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {statusOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

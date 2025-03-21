@@ -24,6 +24,7 @@ export interface Period {
   courseTitle: string;
   facultyId: string;
   originalFacultyId?: string; // Only set if being substituted
+  location?: string; // classroom or location
 }
 
 export interface Timetable {
