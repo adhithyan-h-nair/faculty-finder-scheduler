@@ -44,8 +44,8 @@ const StatusBadge = ({ status, className, pulse = false }: StatusBadgeProps) => 
   return (
     <div
       className={cn(
-        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-        'border',
+        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+        'border transition-all',
         config.bg,
         config.text,
         config.border,
@@ -54,7 +54,7 @@ const StatusBadge = ({ status, className, pulse = false }: StatusBadgeProps) => 
       )}
     >
       <span className={cn(
-        'w-2 h-2 rounded-full mr-1.5',
+        'w-1.5 h-1.5 rounded-full mr-1',
         `bg-faculty-${status}`,
       )}/>
       {statusLabels[status]}

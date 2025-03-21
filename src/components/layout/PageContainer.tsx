@@ -19,12 +19,14 @@ const PageContainer = ({
       <Header />
       <main 
         className={cn(
-          'pt-24 pb-16 px-4 sm:px-6 mx-auto page-transition',
+          'pt-16 sm:pt-20 pb-12 px-3 sm:px-6 mx-auto',
           fullWidth ? 'w-full' : 'max-w-7xl',
           className
         )}
       >
-        {children}
+        <div className="animate-fade-in">
+          {children}
+        </div>
       </main>
     </div>
   );

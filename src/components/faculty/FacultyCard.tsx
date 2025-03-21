@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import { getFacultyById, updateFacultyStatus } from '@/lib/data';
-import { Mail, Phone, UserCheck, UserX, UserCog, Pencil } from 'lucide-react';
+import { Mail, Phone, UserCheck, UserX, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -126,33 +126,33 @@ const FacultyCard = ({
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 animate-fade-in border-gray-200/70 hover:shadow-md", 
+        "overflow-hidden transition-all duration-300 border-gray-200/70 hover:shadow-md", 
         className
       )}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 sm:pb-3">
         <div className="flex justify-between items-start">
-          <CardTitle>{faculty.name}</CardTitle>
+          <CardTitle className="text-base sm:text-lg">{faculty.name}</CardTitle>
           <StatusBadge status={faculty.status} />
         </div>
         <CardDescription>{faculty.department}</CardDescription>
         {substitutionInfo && (
-          <p className="text-sm text-muted-foreground mt-1 italic">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 italic">
             {substitutionInfo}
           </p>
         )}
       </CardHeader>
       
-      <CardContent className="pb-3">
+      <CardContent className="pb-2 sm:pb-3">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Mail size={14} className="mr-2" />
-            <span>{faculty.email}</span>
+          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+            <Mail size={14} className="mr-2 shrink-0" />
+            <span className="truncate">{faculty.email}</span>
           </div>
           
           {faculty.phone && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Phone size={14} className="mr-2" />
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <Phone size={14} className="mr-2 shrink-0" />
               <span>{faculty.phone}</span>
             </div>
           )}
@@ -164,23 +164,23 @@ const FacultyCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-blue-600 border-blue-300"
+            className="text-primary border-primary/30 hover:bg-primary/5"
             onClick={() => onEdit(faculty)}
           >
-            <Pencil size={16} className="mr-1" />
-            Edit Details
+            <Pencil size={14} className="mr-1" />
+            <span className="text-xs sm:text-sm">Edit</span>
           </Button>
           
           {faculty.status === 'available' && (
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-absent border-faculty-absent/30"
+              className="text-faculty-absent border-faculty-absent/30 hover:bg-faculty-absent/5"
               onClick={() => handleStatusChange('absent')}
               disabled={isLoading}
             >
-              <UserX size={16} className="mr-1" />
-              Mark Absent
+              <UserX size={14} className="mr-1" />
+              <span className="text-xs sm:text-sm">Mark Absent</span>
             </Button>
           )}
           
@@ -188,11 +188,12 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
+              className="text-faculty-substituting border-faculty-substituting/30 hover:bg-faculty-substituting/5"
               onClick={handleAssignSubstitute}
               disabled={isLoading}
             >
-              <UserCheck size={16} className="mr-1" />
-              Assign Substitute
+              <UserCheck size={14} className="mr-1" />
+              <span className="text-xs sm:text-sm">Assign Substitute</span>
             </Button>
           )}
           
@@ -200,12 +201,12 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-available border-faculty-available/30"
+              className="text-faculty-available border-faculty-available/30 hover:bg-faculty-available/5"
               onClick={() => handleStatusChange('available')}
               disabled={isLoading}
             >
-              <UserCheck size={16} className="mr-1" />
-              Mark Available
+              <UserCheck size={14} className="mr-1" />
+              <span className="text-xs sm:text-sm">Mark Available</span>
             </Button>
           )}
         </CardFooter>

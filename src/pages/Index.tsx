@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '@/components/layout/PageContainer';
@@ -9,9 +10,11 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { getFacultyStatusCounts, facultyData } from '@/lib/data';
 import { Users, Calendar, AlertTriangle, PieChart, BarChart } from 'lucide-react';
 import { StatusCount } from '@/lib/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [statusCounts, setStatusCounts] = useState<StatusCount>({
     available: 0,
     absent: 0,
@@ -47,27 +50,24 @@ const Index = () => {
   useEffect(() => {
     // Ensure data is loaded on mount
     updateData();
-    
-    // Add debug logging
-    console.log("Index component mounted");
   }, []);
 
   return (
     <PageContainer>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-1">Faculty Dashboard</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1">Faculty Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Overview of faculty status and scheduling
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         {/* Chart Toggle */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-2 sm:mb-4">
           <ToggleGroup 
             type="single" 
             value={chartType} 
-            onValueChange={(value) => {
+            onValueChange={(value: string) => {
               if (value === 'pie' || value === 'bar') {
                 setChartType(value);
               }
@@ -85,31 +85,36 @@ const Index = () => {
         {/* Status Overview */}
         <StatusOverview counts={statusCounts} chartType={chartType} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Faculty Needing Attention */}
-          <Card className="lg:col-span-2 shadow-sm border-gray-200">
+          <Card className="lg:col-span-2 shadow-sm border-gray-200/80 hover:shadow-md transition-all">
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg flex items-center">
-                <AlertTriangle size={18} className="mr-2 text-faculty-absent" />
+              <CardTitle className="text-base sm:text-lg flex items-center">
+                <AlertTriangle size={16} className="mr-2 text-faculty-absent" />
                 Faculty Needing Attention
               </CardTitle>
-              <Button size="sm" variant="outline" onClick={() => navigate('/faculty')}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => navigate('/faculty')}
+                className="text-xs sm:text-sm h-8"
+              >
                 View All
               </Button>
             </CardHeader>
             <CardContent>
               {facultyNeedingAttention.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <div className="w-12 h-12 bg-green-50 text-faculty-available rounded-full flex items-center justify-center mb-3">
-                    <Users size={20} />
+                <div className="flex flex-col items-center justify-center p-6 sm:p-8 text-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 text-faculty-available rounded-full flex items-center justify-center mb-3">
+                    <Users size={isMobile ? 18 : 20} />
                   </div>
-                  <h3 className="font-medium mb-1">All Covered</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-sm sm:text-base font-medium mb-1">All Covered</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     All absent faculty members have been assigned substitutes.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {facultyNeedingAttention.map(faculty => (
                     <FacultyCard 
                       key={faculty.id} 
@@ -124,22 +129,22 @@ const Index = () => {
           </Card>
 
           {/* Quick Links */}
-          <Card className="shadow-sm border-gray-200">
+          <Card className="shadow-sm border-gray-200/80 hover:shadow-md transition-all">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <Button 
                 variant="outline" 
-                className="w-full justify-start h-auto py-4 px-4"
+                className="w-full justify-start h-auto py-3 px-3 sm:px-4 hover:bg-secondary/50 transition-all"
                 onClick={() => navigate('/faculty')}
               >
-                <div className="flex">
-                  <div className="w-10 h-10 bg-blue-50 text-primary rounded-full flex items-center justify-center mr-3">
-                    <Users size={20} />
+                <div className="flex items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 text-primary rounded-full flex items-center justify-center mr-3">
+                    <Users size={isMobile ? 16 : 20} />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">Manage Faculty</div>
+                    <div className="font-medium text-sm sm:text-base">Manage Faculty</div>
                     <div className="text-xs text-muted-foreground">
                       Add, edit or update faculty status
                     </div>
@@ -149,15 +154,15 @@ const Index = () => {
 
               <Button 
                 variant="outline" 
-                className="w-full justify-start h-auto py-4 px-4"
+                className="w-full justify-start h-auto py-3 px-3 sm:px-4 hover:bg-secondary/50 transition-all"
                 onClick={() => navigate('/timetable')}
               >
-                <div className="flex">
-                  <div className="w-10 h-10 bg-blue-50 text-primary rounded-full flex items-center justify-center mr-3">
-                    <Calendar size={20} />
+                <div className="flex items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-50 text-primary rounded-full flex items-center justify-center mr-3">
+                    <Calendar size={isMobile ? 16 : 20} />
                   </div>
                   <div className="text-left">
-                    <div className="font-medium">View Timetables</div>
+                    <div className="font-medium text-sm sm:text-base">View Timetables</div>
                     <div className="text-xs text-muted-foreground">
                       Check and manage faculty schedules
                     </div>
@@ -170,12 +175,12 @@ const Index = () => {
 
         {/* Recent Substitutions */}
         {recentSubstitutions.length > 0 && (
-          <Card className="shadow-sm border-gray-200">
+          <Card className="shadow-sm border-gray-200/80 hover:shadow-md transition-all">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Recent Substitutions</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Recent Substitutions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 {recentSubstitutions.map(faculty => (
                   <FacultyCard 
                     key={faculty.id} 
