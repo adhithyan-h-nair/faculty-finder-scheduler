@@ -15,7 +15,7 @@ const PageContainer = ({
   fullWidth = false
 }: PageContainerProps) => {
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen bg-background">
       <Header />
       <main 
         className={cn(

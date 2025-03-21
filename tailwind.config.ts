@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", ...fontFamily.sans],
-        heading: ["Poppins", ...fontFamily.sans],
+        sans: [...fontFamily.sans],
+        heading: [...fontFamily.sans],
       },
       colors: {
         border: "var(--border)",

@@ -45,7 +45,7 @@ const StatusBadge = ({ status, className, pulse = false }: StatusBadgeProps) => 
     <div
       className={cn(
         'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-        'border transition-all',
+        'border shadow-sm transition-all',
         config.bg,
         config.text,
         config.border,

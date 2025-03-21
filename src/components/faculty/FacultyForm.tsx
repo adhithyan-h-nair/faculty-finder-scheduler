@@ -100,9 +100,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-background border-border text-foreground">
+      <DialogContent className="bg-white text-gray-900 border border-gray-200 shadow-lg max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-heading">
+          <DialogTitle className="text-xl text-gray-900">
             {editFaculty ? 'Edit Faculty' : 'Add New Faculty'}
           </DialogTitle>
         </DialogHeader>
@@ -114,9 +114,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Name</FormLabel>
+                  <FormLabel className="text-gray-700">Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Dr. John Doe" {...field} className="bg-background text-foreground" />
+                    <Input placeholder="Dr. John Doe" {...field} className="bg-white text-gray-900 border-gray-300" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,9 +128,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
               name="department"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Department</FormLabel>
+                  <FormLabel className="text-gray-700">Department</FormLabel>
                   <FormControl>
-                    <Input placeholder="Computer Science" {...field} className="bg-background text-foreground" />
+                    <Input placeholder="Computer Science" {...field} className="bg-white text-gray-900 border-gray-300" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,9 +143,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground">Email</FormLabel>
+                    <FormLabel className="text-gray-700">Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="faculty@university.edu" {...field} className="bg-background text-foreground" />
+                      <Input type="email" placeholder="faculty@university.edu" {...field} className="bg-white text-gray-900 border-gray-300" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -157,9 +157,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground">Phone (Optional)</FormLabel>
+                    <FormLabel className="text-gray-700">Phone (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="555-123-4567" {...field} className="bg-background text-foreground" />
+                      <Input placeholder="555-123-4567" {...field} className="bg-white text-gray-900 border-gray-300" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,17 +172,17 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Status</FormLabel>
+                  <FormLabel className="text-gray-700">Status</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="bg-background text-foreground">
+                      <SelectTrigger className="bg-white text-gray-900 border-gray-300">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-background text-foreground">
+                    <SelectContent className="bg-white text-gray-900">
                       <SelectItem value="available">Available</SelectItem>
                       <SelectItem value="absent">Absent</SelectItem>
                       <SelectItem value="substituting">Substituting</SelectItem>
@@ -195,10 +195,10 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
             />
             
             <DialogFooter className="pt-4">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="font-medium">
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-100">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="font-medium">
+              <Button type="submit" disabled={isSubmitting} className="font-medium bg-primary text-white hover:bg-blue-600">
                 {isSubmitting ? 'Saving...' : (editFaculty ? 'Update' : 'Add Faculty')}
               </Button>
             </DialogFooter>
