@@ -126,7 +126,7 @@ const FacultyCard = ({
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 border-gray-200/70 hover:shadow-md", 
+        "overflow-hidden transition-all duration-300 border-gray-200 hover:shadow-md", 
         className
       )}
     >
@@ -164,7 +164,7 @@ const FacultyCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-primary border-primary/30 hover:bg-primary/5"
+            className="text-primary border-primary/80 hover:bg-primary/10"
             onClick={() => onEdit(faculty)}
           >
             <Pencil size={14} className="mr-1" />
@@ -175,7 +175,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-absent border-faculty-absent/30 hover:bg-faculty-absent/5"
+              className="text-faculty-absent border-faculty-absent/80 hover:bg-faculty-absent/10"
               onClick={() => handleStatusChange('absent')}
               disabled={isLoading}
             >
@@ -188,7 +188,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-substituting border-faculty-substituting/30 hover:bg-faculty-substituting/5"
+              className="text-faculty-substituting border-faculty-substituting/80 hover:bg-faculty-substituting/10"
               onClick={handleAssignSubstitute}
               disabled={isLoading}
             >
@@ -201,7 +201,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-available border-faculty-available/30 hover:bg-faculty-available/5"
+              className="text-faculty-available border-faculty-available/80 hover:bg-faculty-available/10"
               onClick={() => handleStatusChange('available')}
               disabled={isLoading}
             >

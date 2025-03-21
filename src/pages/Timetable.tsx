@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StatusBadge from '@/components/ui/status-badge';
 import { facultyData, getFacultyTimetable } from '@/lib/data';
 import { Faculty, Period } from '@/lib/types';
-import { Calendar } from 'lucide-react';
+import { Calendar, UserCog } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const TimetablePage = () => {
   const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   const [timetable, setTimetable] = useState<Period[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   
   // Set default faculty to first in list
   useEffect(() => {
@@ -33,6 +35,21 @@ const TimetablePage = () => {
       }, 300);
     }
   }, [selectedFaculty]);
+
+  const handleTimetableUpdate = () => {
+    setLoading(true);
+    setTimeout(() => {
+      if (selectedFaculty) {
+        const periods = getFacultyTimetable(selectedFaculty.id);
+        setTimetable(periods);
+        toast({
+          title: "Timetable Updated",
+          description: "The faculty timetable has been updated successfully.",
+        });
+      }
+      setLoading(false);
+    }, 300);
+  };
   
   return (
     <PageContainer>
@@ -70,7 +87,7 @@ const TimetablePage = () => {
             
             {selectedFaculty && (
               <div className="flex items-center gap-3">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm">
                   {selectedFaculty.department}
                 </div>
                 <StatusBadge status={selectedFaculty.status} />
@@ -96,7 +113,11 @@ const TimetablePage = () => {
           </p>
         </div>
       ) : (
-        <TimetableView periods={timetable} />
+        <TimetableView 
+          periods={timetable} 
+          facultyId={selectedFaculty?.id || ''}
+          onUpdateTimetable={handleTimetableUpdate}
+        />
       )}
     </PageContainer>
   );

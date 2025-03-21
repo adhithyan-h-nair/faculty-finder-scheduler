@@ -4,15 +4,23 @@ import { Period, Day } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
+import TimetableEditDialog from './TimetableEditDialog';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TimetableViewProps {
   periods: Period[];
   className?: string;
+  facultyId: string;
+  onUpdateTimetable: () => void;
 }
 
-const TimetableView = ({ periods, className }: TimetableViewProps) => {
+const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: TimetableViewProps) => {
   const [selectedDay, setSelectedDay] = useState<Day>('Monday');
   const days: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const [editPeriod, setEditPeriod] = useState<Period | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddNew, setIsAddNew] = useState(false);
   
   // Group periods by day
   const periodsByDay = days.reduce<Record<Day, Period[]>>((acc, day) => {
@@ -37,30 +45,53 @@ const TimetableView = ({ periods, className }: TimetableViewProps) => {
       }
     }
   }, [periods, selectedDay, periodsByDay]);
+
+  const handleEditPeriod = (period: Period) => {
+    setEditPeriod(period);
+    setIsAddNew(false);
+    setIsDialogOpen(true);
+  };
+
+  const handleAddPeriod = () => {
+    setEditPeriod(null);
+    setIsAddNew(true);
+    setIsDialogOpen(true);
+  };
   
   return (
     <div className={cn("w-full", className)}>
       <Tabs value={selectedDay} onValueChange={(value) => setSelectedDay(value as Day)}>
-        <TabsList className="mb-4 w-full">
-          {days.map(day => (
-            <TabsTrigger
-              key={day}
-              value={day}
-              disabled={periodsByDay[day].length === 0}
-              className={cn(
-                "relative transition-all duration-300",
-                periodsByDay[day].length === 0 ? "opacity-40" : ""
-              )}
-            >
-              {day}
-              {periodsByDay[day].length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
-                  {periodsByDay[day].length}
-                </span>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="flex justify-between items-center mb-4">
+          <TabsList className="w-auto">
+            {days.map(day => (
+              <TabsTrigger
+                key={day}
+                value={day}
+                disabled={periodsByDay[day].length === 0}
+                className={cn(
+                  "relative transition-all duration-300",
+                  periodsByDay[day].length === 0 ? "opacity-40" : ""
+                )}
+              >
+                {day}
+                {periodsByDay[day].length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
+                    {periodsByDay[day].length}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <Button 
+            size="sm" 
+            onClick={handleAddPeriod}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Plus size={16} className="mr-1" />
+            Add Period
+          </Button>
+        </div>
         
         {days.map(day => (
           <TabsContent 
@@ -80,6 +111,7 @@ const TimetableView = ({ periods, className }: TimetableViewProps) => {
                       key={period.id} 
                       period={period} 
                       className="mb-3"
+                      onEdit={() => handleEditPeriod(period)}
                     />
                   ))}
                 </div>
@@ -88,6 +120,16 @@ const TimetableView = ({ periods, className }: TimetableViewProps) => {
           </TabsContent>
         ))}
       </Tabs>
+
+      <TimetableEditDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        period={editPeriod}
+        isNewPeriod={isAddNew}
+        facultyId={facultyId}
+        selectedDay={selectedDay}
+        onSave={onUpdateTimetable}
+      />
     </div>
   );
 };

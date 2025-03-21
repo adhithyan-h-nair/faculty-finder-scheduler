@@ -37,8 +37,8 @@ const FacultyPage = () => {
   
   // Load faculty data
   useEffect(() => {
-    setFacultyList(facultyData);
-    setFilteredList(facultyData);
+    setFacultyList([...facultyData]);
+    setFilteredList([...facultyData]);
   }, []);
   
   // Handle filtering

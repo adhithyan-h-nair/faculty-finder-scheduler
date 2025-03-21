@@ -48,17 +48,13 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold;
+    @apply font-semibold;
   }
 }
 
 @layer components {
-  .glass-effect {
-    @apply bg-white/70 backdrop-blur-md border border-white/30 shadow-sm;
-  }
-
   .glass-card {
-    @apply glass-effect rounded-xl p-6 transition-all duration-300;
+    @apply bg-white rounded-xl p-6 transition-all duration-300 shadow-sm border border-gray-200;
   }
 
   .reveal-animation {
@@ -82,7 +78,7 @@
   }
 
   .mobile-card {
-    @apply p-4 rounded-lg shadow-sm border border-gray-200/80;
+    @apply p-4 rounded-lg shadow-sm border border-gray-200;
   }
 }
 
@@ -100,3 +96,22 @@
     @apply text-sm sm:text-base;
   }
 }
+
+/* Animation for slide up */
+@keyframes slide-up {
+  0% { 
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animation for fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
