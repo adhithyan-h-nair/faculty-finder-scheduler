@@ -50,7 +50,7 @@ const IndexPage = () => {
     }
   };
   
-  const handleEdit = () => {
+  const handleEdit = (faculty) => {
     navigate('/faculty');
   };
 
@@ -104,7 +104,7 @@ const IndexPage = () => {
             key={faculty.id}
             faculty={faculty}
             onUpdate={handleFormSave}
-            onEdit={handleEdit}
+            onEdit={() => handleEdit(faculty)}
             onDelete={() => handleDelete(faculty)}
           />
         ))}
@@ -132,7 +132,7 @@ const IndexPage = () => {
                 key={faculty.id}
                 faculty={faculty}
                 onUpdate={handleFormSave}
-                onEdit={handleEdit}
+                onEdit={() => handleEdit(faculty)}
                 onDelete={() => handleDelete(faculty)}
                 showControls={false}
               />
