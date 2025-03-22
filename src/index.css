@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -114,6 +113,29 @@
 /* Make all toast notifications solid white */
 [role="status"] {
   @apply bg-white border border-gray-200 !important;
+}
+
+/* Additional selectors to ensure all transparent elements are fixed */
+.radix-dropdown-content,
+.dropdown-menu,
+.popover-content,
+.select-dropdown,
+.radix-popper-content,
+.dialog-content,
+.toast-content,
+.notification-content {
+  @apply bg-white !important;
+}
+
+/* Ensure all dialog content is opaque */
+[role="dialog"] {
+  @apply bg-white !important;
+}
+
+/* Ensure that context menus and tooltips are opaque */
+[data-radix-menu-content],
+[data-radix-tooltip-content] {
+  @apply bg-white !important;
 }
 
 /* Mobile-first responsive styles */
