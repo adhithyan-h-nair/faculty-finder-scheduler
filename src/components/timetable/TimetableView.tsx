@@ -5,17 +5,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus, Calendar } from 'lucide-react';
+import { Plus, Calendar, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface TimetableViewProps {
   periods: Period[];
   className?: string;
   facultyId: string;
   onUpdateTimetable: () => void;
+  onDeletePeriod?: (periodId: string) => void;
 }
 
-const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: TimetableViewProps) => {
+const TimetableView = ({ 
+  periods, 
+  className, 
+  facultyId, 
+  onUpdateTimetable,
+  onDeletePeriod 
+}: TimetableViewProps) => {
+  const { toast } = useToast();
   const [selectedDay, setSelectedDay] = useState<Day>('Monday');
   const days: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const [editPeriod, setEditPeriod] = useState<Period | null>(null);
@@ -56,6 +65,16 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
     setEditPeriod(null);
     setIsAddNew(true);
     setIsDialogOpen(true);
+  };
+
+  const handleDeletePeriod = (periodId: string) => {
+    if (onDeletePeriod) {
+      onDeletePeriod(periodId);
+      toast({
+        title: "Period Deleted",
+        description: "The class period has been deleted successfully.",
+      });
+    }
   };
   
   return (
@@ -110,12 +129,21 @@ const TimetableView = ({ periods, className, facultyId, onUpdateTimetable }: Tim
               ) : (
                 <div className="staggered-animation">
                   {periodsByDay[day].map((period, index) => (
-                    <PeriodCard 
-                      key={period.id} 
-                      period={period} 
-                      className="mb-3"
-                      onEdit={() => handleEditPeriod(period)}
-                    />
+                    <div key={period.id} className="flex items-start gap-2 mb-3">
+                      <PeriodCard 
+                        period={period} 
+                        className="flex-1"
+                        onEdit={() => handleEditPeriod(period)}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleDeletePeriod(period.id)}
+                        className="flex-shrink-0 bg-white text-destructive border-destructive/30 hover:bg-destructive/10"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    </div>
                   ))}
                 </div>
               )}

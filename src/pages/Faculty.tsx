@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Faculty, FacultyStatus } from '@/lib/types';
-import { facultyData, getFacultyById } from '@/lib/data';
+import { facultyData, getFacultyById, removeFaculty } from '@/lib/data';
 import { UserPlus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const FacultyPage = () => {
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [facultyList, setFacultyList] = useState<Faculty[]>([]);
   const [filteredList, setFilteredList] = useState<Faculty[]>([]);
@@ -38,8 +40,8 @@ const FacultyPage = () => {
   // Load faculty data
   useEffect(() => {
     // Directly use the facultyData import
-    setFacultyList(facultyData);
-    setFilteredList(facultyData);
+    setFacultyList([...facultyData]);
+    setFilteredList([...facultyData]);
   }, []);
   
   // Handle filtering
@@ -73,6 +75,25 @@ const FacultyPage = () => {
   const handleEdit = (faculty: Faculty) => {
     setEditFaculty(faculty);
     setIsFormOpen(true);
+  };
+  
+  const handleDelete = (faculty: Faculty) => {
+    const success = removeFaculty(faculty.id);
+    if (success) {
+      toast({
+        title: "Faculty Removed",
+        description: `${faculty.name} has been removed successfully.`,
+      });
+      // Update the lists
+      setFacultyList([...facultyData]);
+      setFilteredList([...facultyData]);
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to remove faculty member.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleFormSave = () => {
@@ -169,6 +190,8 @@ const FacultyPage = () => {
               faculty={faculty}
               onUpdate={handleFormSave}
               onEdit={handleEdit}
+              onDelete={handleDelete}
+              showControls={true}
             />
           ))
         )}

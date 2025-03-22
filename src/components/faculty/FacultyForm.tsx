@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Faculty, FacultyStatus } from '@/lib/types';
 import { addFaculty } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { Save } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -199,7 +200,8 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="font-medium bg-primary text-white hover:bg-blue-600">
-                {isSubmitting ? 'Saving...' : (editFaculty ? 'Update' : 'Add Faculty')}
+                <Save size={16} className="mr-2" />
+                {isSubmitting ? 'Saving...' : (editFaculty ? 'Save Changes' : 'Add Faculty')}
               </Button>
             </DialogFooter>
           </form>

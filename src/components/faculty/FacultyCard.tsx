@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import { getFacultyById, updateFacultyStatus } from '@/lib/data';
-import { Mail, Phone, UserCheck, UserX, Pencil } from 'lucide-react';
+import { Mail, Phone, UserCheck, UserX, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ interface FacultyCardProps {
   faculty: Faculty;
   onUpdate: () => void;
   onEdit: (faculty: Faculty) => void;
+  onDelete: (faculty: Faculty) => void;
   showControls?: boolean;
   className?: string;
 }
@@ -21,6 +22,7 @@ const FacultyCard = ({
   faculty, 
   onUpdate, 
   onEdit, 
+  onDelete,
   showControls = true,
   className 
 }: FacultyCardProps) => {
@@ -169,6 +171,16 @@ const FacultyCard = ({
           >
             <Pencil size={14} className="mr-1" />
             <span className="text-xs sm:text-sm">Edit</span>
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/80 hover:bg-destructive/10"
+            onClick={() => onDelete(faculty)}
+          >
+            <Trash2 size={14} className="mr-1" />
+            <span className="text-xs sm:text-sm">Delete</span>
           </Button>
           
           {faculty.status === 'available' && (
