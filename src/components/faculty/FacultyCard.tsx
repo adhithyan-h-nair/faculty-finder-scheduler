@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import { getFacultyById, updateFacultyStatus } from '@/lib/data';
-import { Mail, Phone, UserCheck, UserX, Pencil, Trash2 } from 'lucide-react';
+import { Mail, Phone, UserCheck, UserX, Pencil, Trash2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 

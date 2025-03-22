@@ -96,6 +96,26 @@
   @apply bg-white !important;
 }
 
+/* Force opaque backgrounds for selects and dropdowns */
+[role="listbox"],
+[role="dialog"],
+[role="menu"],
+.select-content,
+.dropdown-content {
+  @apply bg-white !important;
+}
+
+/* Make all popover content solid white */
+[data-state="open"] > div,
+[data-state="open"] > div > div {
+  @apply bg-white !important;
+}
+
+/* Make all toast notifications solid white */
+[role="status"] {
+  @apply bg-white border border-gray-200 !important;
+}
+
 /* Mobile-first responsive styles */
 @layer utilities {
   .responsive-grid {
