@@ -7,14 +7,16 @@ import FacultyCard from '@/components/faculty/FacultyCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { getFacultyStatusCounts, facultyData } from '@/lib/data';
+import { getFacultyStatusCounts, facultyData, removeFaculty } from '@/lib/data';
 import { Users, Calendar, AlertTriangle, PieChart, BarChart } from 'lucide-react';
-import { StatusCount } from '@/lib/types';
+import { StatusCount, Faculty } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [statusCounts, setStatusCounts] = useState<StatusCount>({
     available: 0,
     absent: 0,
@@ -51,6 +53,24 @@ const Index = () => {
     // Ensure data is loaded on mount
     updateData();
   }, []);
+
+  // Handler for delete action
+  const handleDelete = (faculty: Faculty) => {
+    const success = removeFaculty(faculty.id);
+    if (success) {
+      toast({
+        title: "Faculty Removed",
+        description: `${faculty.name} has been removed successfully.`,
+      });
+      updateData();
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to remove faculty member.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <PageContainer>
@@ -121,6 +141,7 @@ const Index = () => {
                       faculty={faculty} 
                       onUpdate={updateData}
                       onEdit={() => navigate(`/faculty?edit=${faculty.id}`)}
+                      onDelete={handleDelete}
                     />
                   ))}
                 </div>
@@ -187,6 +208,7 @@ const Index = () => {
                     faculty={faculty} 
                     onUpdate={updateData}
                     onEdit={() => navigate(`/faculty?edit=${faculty.id}`)}
+                    onDelete={handleDelete}
                     showControls={false}
                   />
                 ))}
