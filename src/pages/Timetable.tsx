@@ -51,6 +51,24 @@ const TimetablePage = () => {
     }, 300);
   };
 
+  const handleDeletePeriod = (periodId: string) => {
+    // In a real app, this would be an API call to delete the period
+    setLoading(true);
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Here we're just refreshing the timetable
+      if (selectedFaculty) {
+        const periods = getFacultyTimetable(selectedFaculty.id);
+        setTimetable(periods);
+        toast({
+          title: "Period Deleted",
+          description: "The class period has been deleted successfully.",
+        });
+      }
+      setLoading(false);
+    }, 300);
+  };
+
   const periodCount = timetable.length;
   const courseCount = new Set(timetable.map(p => p.courseCode)).size;
   
@@ -150,6 +168,7 @@ const TimetablePage = () => {
           periods={timetable} 
           facultyId={selectedFaculty?.id || ''}
           onUpdateTimetable={handleTimetableUpdate}
+          onDeletePeriod={handleDeletePeriod}
         />
       )}
     </PageContainer>

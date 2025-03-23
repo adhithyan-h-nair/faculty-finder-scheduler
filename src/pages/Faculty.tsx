@@ -100,6 +100,10 @@ const FacultyPage = () => {
     // Refresh data - in real app, this would be an API call
     setFacultyList([...facultyData]);
     setFilteredList([...facultyData]);
+    toast({
+      title: "Faculty Updated",
+      description: "Faculty information has been updated successfully.",
+    });
   };
   
   const statusOptions: { value: FacultyStatus | 'all', label: string }[] = [

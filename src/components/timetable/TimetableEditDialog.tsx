@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { facultyData, getFacultyById } from '@/lib/data';
+import { Save } from 'lucide-react';
 
 interface TimetableEditDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ const TimetableEditDialog = ({
   });
 
   const [isSubstitute, setIsSubstitute] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (period) {
@@ -72,7 +74,7 @@ const TimetableEditDialog = ({
       });
       setIsSubstitute(false);
     }
-  }, [period, selectedDay, facultyId]);
+  }, [period, selectedDay, facultyId, open]);
 
   const handleChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -82,23 +84,28 @@ const TimetableEditDialog = ({
   };
 
   const handleSubmit = () => {
+    setIsSubmitting(true);
     try {
       const faculty = getFacultyById(facultyId);
       
       // In a real app, this would be an API call to update or create a period
-      toast({
-        title: isNewPeriod ? "Period Added" : "Period Updated",
-        description: `${faculty?.name}'s timetable has been updated successfully.`,
-      });
-      
-      onSave();
-      onOpenChange(false);
+      setTimeout(() => {
+        toast({
+          title: isNewPeriod ? "Period Added" : "Period Updated",
+          description: `${faculty?.name}'s timetable has been updated successfully.`,
+        });
+        
+        onSave();
+        onOpenChange(false);
+        setIsSubmitting(false);
+      }, 500);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to save period information.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -256,11 +263,16 @@ const TimetableEditDialog = ({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-white">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary text-white">
-            {isNewPeriod ? 'Add Period' : 'Save Changes'}
+          <Button 
+            onClick={handleSubmit} 
+            className="bg-primary text-white"
+            disabled={isSubmitting}
+          >
+            <Save size={16} className="mr-2" />
+            {isSubmitting ? 'Saving...' : (isNewPeriod ? 'Add Period' : 'Save Changes')}
           </Button>
         </div>
       </DialogContent>

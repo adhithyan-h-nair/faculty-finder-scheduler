@@ -74,6 +74,17 @@ const TimetableView = ({
         title: "Period Deleted",
         description: "The class period has been deleted successfully.",
       });
+    } else {
+      // Default implementation if no onDeletePeriod is provided
+      toast({
+        title: "Period Deleted",
+        description: "The class period has been deleted successfully.",
+      });
+      
+      // Update timetable after deletion
+      setTimeout(() => {
+        onUpdateTimetable();
+      }, 300);
     }
   };
   

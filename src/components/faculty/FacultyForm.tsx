@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Faculty, FacultyStatus } from '@/lib/types';
-import { addFaculty } from '@/lib/data';
+import { addFaculty, facultyData } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
 
@@ -34,21 +34,34 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const defaultValues: FormValues = editFaculty 
-    ? {
+  // Reset form when editFaculty changes
+  useEffect(() => {
+    if (editFaculty) {
+      form.reset({
         name: editFaculty.name,
         department: editFaculty.department,
         email: editFaculty.email,
         phone: editFaculty.phone || '',
         status: editFaculty.status,
-      }
-    : {
+      });
+    } else {
+      form.reset({
         name: '',
         department: '',
         email: '',
         phone: '',
         status: 'available',
-      };
+      });
+    }
+  }, [editFaculty, open]);
+  
+  const defaultValues: FormValues = {
+    name: '',
+    department: '',
+    email: '',
+    phone: '',
+    status: 'available',
+  };
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,6 +76,16 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
       if (editFaculty) {
         // In a real app, this would call an API
         console.log("Updating faculty:", { ...editFaculty, ...data });
+        
+        // Update faculty in the facultyData array
+        const index = facultyData.findIndex(f => f.id === editFaculty.id);
+        if (index >= 0) {
+          facultyData[index] = {
+            ...editFaculty,
+            ...data
+          };
+        }
+        
         toast({
           title: "Faculty Updated",
           description: `${data.name} has been updated.`,
@@ -177,6 +200,7 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
                   <Select 
                     onValueChange={field.onChange} 
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger className="bg-white text-gray-900 border-gray-300">
