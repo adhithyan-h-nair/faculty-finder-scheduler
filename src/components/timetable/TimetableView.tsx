@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Period, Day } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,7 +32,6 @@ const TimetableView = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddNew, setIsAddNew] = useState(false);
   
-  // Group periods by day
   const periodsByDay = days.reduce<Record<Day, Period[]>>((acc, day) => {
     acc[day] = periods.filter(period => period.day === day)
       .sort((a, b) => a.periodNumber - b.periodNumber);
@@ -46,10 +44,8 @@ const TimetableView = ({
     Friday: []
   });
   
-  // Effect to select first day with periods if current selection is empty
   useEffect(() => {
     if (periodsByDay[selectedDay].length === 0) {
-      // Find first day with periods
       const dayWithPeriods = days.find(day => periodsByDay[day].length > 0);
       if (dayWithPeriods) {
         setSelectedDay(dayWithPeriods);
@@ -77,13 +73,11 @@ const TimetableView = ({
         description: "The class period has been deleted successfully.",
       });
     } else {
-      // Default implementation if no onDeletePeriod is provided
       toast({
         title: "Period Deleted",
         description: "The class period has been deleted successfully.",
       });
       
-      // Update timetable after deletion
       setTimeout(() => {
         onUpdateTimetable();
       }, 300);
@@ -91,14 +85,13 @@ const TimetableView = ({
   };
 
   const getDayLabel = (day: Day) => {
-    // Mobile-friendly abbreviations for days
     switch(day) {
       case 'Monday': return { short: 'Mon', full: 'Monday' };
       case 'Tuesday': return { short: 'Tue', full: 'Tuesday' };
       case 'Wednesday': return { short: 'Wed', full: 'Wednesday' };
       case 'Thursday': return { short: 'Thu', full: 'Thursday' };
       case 'Friday': return { short: 'Fri', full: 'Friday' };
-      default: return { short: day.substring(0, 3), full: day };
+      default: return { short: day.slice(0, 3), full: day };
     }
   };
   
@@ -106,7 +99,6 @@ const TimetableView = ({
     <div className={cn("w-full bg-white p-4 rounded-lg shadow-sm", className)}>
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          {/* New Day Selector */}
           <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
             <ToggleGroup 
               type="single" 
@@ -153,7 +145,6 @@ const TimetableView = ({
           </Button>
         </div>
         
-        {/* Period Content */}
         <div className="mt-2">
           {periodsByDay[selectedDay].length === 0 ? (
             <div className="py-8 text-center text-muted-foreground bg-slate-50 rounded-lg border border-slate-200">
