@@ -220,10 +220,19 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
             />
             
             <DialogFooter className="pt-4">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)} className="font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-100">
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={() => onOpenChange(false)} 
+                className="font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="font-medium bg-primary text-white hover:bg-blue-600">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="font-medium bg-green-600 hover:bg-green-700 text-white shadow-sm"
+              >
                 <Save size={16} className="mr-2" />
                 {isSubmitting ? 'Saving...' : (editFaculty ? 'Save Changes' : 'Add Faculty')}
               </Button>

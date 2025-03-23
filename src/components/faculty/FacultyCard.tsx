@@ -166,7 +166,7 @@ const FacultyCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-primary border-primary/80 hover:bg-primary/10"
+            className="bg-blue-50 text-blue-600 border-blue-300 hover:bg-blue-100"
             onClick={() => onEdit(faculty)}
           >
             <Pencil size={14} className="mr-1" />
@@ -176,7 +176,7 @@ const FacultyCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-destructive border-destructive/80 hover:bg-destructive/10"
+            className="bg-red-50 text-red-600 border-red-300 hover:bg-red-100"
             onClick={() => onDelete(faculty)}
           >
             <Trash2 size={14} className="mr-1" />
@@ -187,7 +187,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-absent border-faculty-absent/80 hover:bg-faculty-absent/10"
+              className="bg-orange-50 text-orange-600 border-orange-300 hover:bg-orange-100"
               onClick={() => handleStatusChange('absent')}
               disabled={isLoading}
             >
@@ -200,7 +200,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-substituting border-faculty-substituting/80 hover:bg-faculty-substituting/10"
+              className="bg-purple-50 text-purple-600 border-purple-300 hover:bg-purple-100"
               onClick={handleAssignSubstitute}
               disabled={isLoading}
             >
@@ -213,7 +213,7 @@ const FacultyCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-faculty-available border-faculty-available/80 hover:bg-faculty-available/10"
+              className="bg-green-50 text-green-600 border-green-300 hover:bg-green-100"
               onClick={() => handleStatusChange('available')}
               disabled={isLoading}
             >

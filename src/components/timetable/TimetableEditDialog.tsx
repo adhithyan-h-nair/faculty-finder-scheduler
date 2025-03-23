@@ -268,7 +268,7 @@ const TimetableEditDialog = ({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            className="bg-primary text-white"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
             disabled={isSubmitting}
           >
             <Save size={16} className="mr-2" />

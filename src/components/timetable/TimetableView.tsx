@@ -117,7 +117,7 @@ const TimetableView = ({
           <Button 
             size="sm" 
             onClick={handleAddPeriod}
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
           >
             <Plus size={16} className="mr-1" />
             Add Period
@@ -150,7 +150,7 @@ const TimetableView = ({
                         variant="outline"
                         size="icon"
                         onClick={() => handleDeletePeriod(period.id)}
-                        className="flex-shrink-0 bg-white text-destructive border-destructive/30 hover:bg-destructive/10"
+                        className="flex-shrink-0 bg-white text-red-500 border-red-300 hover:bg-red-50"
                       >
                         <Trash2 size={18} />
                       </Button>
