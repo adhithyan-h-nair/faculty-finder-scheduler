@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Period, Day } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -91,7 +92,7 @@ const TimetableView = ({
       case 'Wednesday': return { short: 'Wed', full: 'Wednesday' };
       case 'Thursday': return { short: 'Thu', full: 'Thursday' };
       case 'Friday': return { short: 'Fri', full: 'Friday' };
-      default: return { short: day.slice(0, 3), full: day };
+      default: return { short: day.substring(0, 3), full: day };
     }
   };
   
