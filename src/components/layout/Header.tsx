@@ -1,13 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Home, Users, Calendar, Menu, X } from 'lucide-react';
+import { Home, Users, Calendar, Menu, X, LogOut, GraduationCap, BookOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { role, isAuthenticated, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -25,18 +28,56 @@ const Header = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: <Home size={18} /> },
-    { path: '/faculty', label: 'Faculty', icon: <Users size={18} /> },
-    { path: '/timetable', label: 'Timetable', icon: <Calendar size={18} /> },
-  ];
+  // Generate nav items based on user role
+  const getNavItems = () => {
+    const commonItems = [
+      { path: '/dashboard', label: 'Dashboard', icon: <Home size={18} /> },
+    ];
+    
+    if (role === 'admin') {
+      return [
+        ...commonItems,
+        { path: '/faculty', label: 'Faculty', icon: <Users size={18} /> },
+        { path: '/student-management', label: 'Students', icon: <GraduationCap size={18} /> },
+        { path: '/timetable', label: 'Timetable', icon: <Calendar size={18} /> },
+      ];
+    } else if (role === 'faculty') {
+      return [
+        ...commonItems,
+        { path: '/faculty', label: 'Faculty', icon: <Users size={18} /> },
+        { path: '/timetable', label: 'Timetable', icon: <Calendar size={18} /> },
+      ];
+    } else if (role === 'student') {
+      return [
+        ...commonItems,
+        { path: '/student-timetable', label: 'Timetable', icon: <Calendar size={18} /> },
+      ];
+    }
+    
+    // Default for logged out users
+    return [
+      { path: '/', label: 'Home', icon: <Home size={18} /> },
+      { path: '/login', label: 'Login', icon: <BookOpen size={18} /> },
+    ];
+  };
+  
+  const navItems = getNavItems();
 
   // Helper function to check if a path matches the current location
   const isPathActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
+    if (path === '/dashboard' && location.pathname === '/dashboard') return true;
     if (path === '/faculty' && location.pathname.includes('/faculty')) return true;
     if (path === '/timetable' && location.pathname.includes('/timetable')) return true;
+    if (path === '/student-timetable' && location.pathname.includes('/student-timetable')) return true;
+    if (path === '/student-management' && location.pathname.includes('/student-management')) return true;
+    if (path === '/' && location.pathname === '/') return true;
+    if (path === '/login' && location.pathname === '/login') return true;
     return false;
   };
 
@@ -51,14 +92,14 @@ const Header = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link 
-          to="/" 
+          to={isAuthenticated ? "/dashboard" : "/"} 
           className="font-semibold text-lg sm:text-xl tracking-tight text-primary transition-all duration-300"
         >
           Faculty Scheduler
         </Link>
         
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-1">
+        <nav className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
             <Link key={item.path} to={item.path}>
               <Button
@@ -75,6 +116,17 @@ const Header = () => {
               </Button>
             </Link>
           ))}
+          
+          {isAuthenticated && (
+            <Button 
+              variant="outline" 
+              className="ml-2 border-red-200 text-red-600 hover:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut size={18} className="mr-2" />
+              Logout
+            </Button>
+          )}
         </nav>
         
         {/* Mobile Menu Button */}
@@ -106,6 +158,16 @@ const Header = () => {
                 <span className="ml-2">{item.label}</span>
               </Link>
             ))}
+            
+            {isAuthenticated && (
+              <button 
+                className="w-full flex items-center py-3 px-6 text-red-600 hover:bg-red-50"
+                onClick={handleLogout}
+              >
+                <LogOut size={18} />
+                <span className="ml-2">Logout</span>
+              </button>
+            )}
           </div>
         )}
       </div>

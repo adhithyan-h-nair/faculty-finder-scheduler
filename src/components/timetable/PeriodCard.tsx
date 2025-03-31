@@ -3,7 +3,7 @@ import { Period } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { getFacultyById } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { Clock, BookOpen, User, Pencil, MapPin } from 'lucide-react';
+import { Clock, BookOpen, User, Pencil, GraduationCap, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PeriodCardProps {
@@ -42,6 +42,18 @@ const PeriodCard = ({ period, className, onEdit }: PeriodCardProps) => {
               <div className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Period {period.periodNumber}</div>
             </div>
             
+            <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-2">
+                <GraduationCap size={14} className="shrink-0" />
+                <div>Semester: {period.semester}</div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Building size={14} className="shrink-0" />
+                <div>Dept: {period.department}</div>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <User size={14} className="shrink-0" />
               {isSubstituted ? (
@@ -55,13 +67,6 @@ const PeriodCard = ({ period, className, onEdit }: PeriodCardProps) => {
                 <div>{faculty?.name}</div>
               )}
             </div>
-
-            {period.location && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                <MapPin size={14} className="shrink-0" />
-                <div>{period.location}</div>
-              </div>
-            )}
           </div>
           
           {onEdit && (

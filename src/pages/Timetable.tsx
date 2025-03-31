@@ -1,27 +1,34 @@
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import PageContainer from '@/components/layout/PageContainer';
 import TimetableView from '@/components/timetable/TimetableView';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
-import { facultyData, getFacultyTimetable } from '@/lib/data';
-import { Faculty, Period } from '@/lib/types';
-import { Calendar, UserCog, School, BookOpen } from 'lucide-react';
+import { facultyData, getFacultyTimetable, getTodayDay } from '@/lib/data';
+import { Faculty, Period, Semester } from '@/lib/types';
+import { Calendar, UserCog, BookOpen, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const TimetablePage = () => {
+  const { role, facultyId } = useAuth();
   const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   const [timetable, setTimetable] = useState<Period[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  
-  // Set default faculty to first in list
+
+  // Set default faculty based on logged in user or first in list
   useEffect(() => {
-    if (facultyData.length > 0 && !selectedFaculty) {
+    if (role === 'faculty' && facultyId) {
+      const faculty = facultyData.find(f => f.id === facultyId);
+      if (faculty) {
+        setSelectedFaculty(faculty);
+      }
+    } else if (facultyData.length > 0 && !selectedFaculty) {
       setSelectedFaculty(facultyData[0]);
     }
-  }, [facultyData, selectedFaculty]);
+  }, [facultyData, selectedFaculty, role, facultyId]);
   
   // Load timetable when faculty changes
   useEffect(() => {
@@ -71,6 +78,15 @@ const TimetablePage = () => {
 
   const periodCount = timetable.length;
   const courseCount = new Set(timetable.map(p => p.courseCode)).size;
+  const semesterCount = new Set(timetable.map(p => p.semester)).size;
+  const todayDay = getTodayDay();
+  const todayCount = timetable.filter(p => p.day === todayDay).length;
+  
+  // Group by semester for analysis
+  const semesterCounts = timetable.reduce<Record<Semester, number>>((acc, period) => {
+    acc[period.semester] = (acc[period.semester] || 0) + 1;
+    return acc;
+  }, {} as Record<Semester, number>);
   
   return (
     <PageContainer>
@@ -93,6 +109,7 @@ const TimetablePage = () => {
                   const faculty = facultyData.find(f => f.id === value);
                   if (faculty) setSelectedFaculty(faculty);
                 }}
+                disabled={role === 'faculty'} // Disable selection for faculty users
               >
                 <SelectTrigger className="bg-white">
                   <SelectValue placeholder="Select faculty" />
@@ -120,13 +137,13 @@ const TimetablePage = () => {
                 </div>
                 
                 {!loading && timetable.length > 0 && (
-                  <div className="flex flex-row gap-6">
+                  <div className="flex flex-row flex-wrap gap-4">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                         <Calendar size={16} className="text-green-600" />
                       </div>
                       <div>
-                        <div className="text-xs text-muted-foreground">Periods</div>
+                        <div className="text-xs text-muted-foreground">Total Periods</div>
                         <div className="font-medium">{periodCount}</div>
                       </div>
                     </div>
@@ -140,6 +157,16 @@ const TimetablePage = () => {
                         <div className="font-medium">{courseCount}</div>
                       </div>
                     </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Clock size={16} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Today</div>
+                        <div className="font-medium">{todayCount} periods</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </>
@@ -147,6 +174,24 @@ const TimetablePage = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Semester Overview */}
+      {!loading && Object.keys(semesterCounts).length > 0 && (
+        <Card className="mb-6 shadow-sm border-gray-200 bg-white">
+          <CardContent className="p-4">
+            <h3 className="text-lg font-medium mb-3">Semester Distribution</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {Object.entries(semesterCounts).map(([semester, count]) => (
+                <div key={semester} className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                  <div className="text-sm text-muted-foreground">{semester} Semester</div>
+                  <div className="text-xl font-bold">{count}</div>
+                  <div className="text-xs text-muted-foreground">periods</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Timetable View */}
       {loading ? (
@@ -169,6 +214,7 @@ const TimetablePage = () => {
           facultyId={selectedFaculty?.id || ''}
           onUpdateTimetable={handleTimetableUpdate}
           onDeletePeriod={handleDeletePeriod}
+          showSubstituteControls={selectedFaculty?.id === facultyId || role === 'admin'}
         />
       )}
     </PageContainer>

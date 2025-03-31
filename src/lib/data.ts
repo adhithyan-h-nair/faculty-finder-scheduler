@@ -1,7 +1,7 @@
 
-import { Faculty, Period, FacultyStatus, Day } from "./types";
+import { Faculty, Period, FacultyStatus, Day, Student, User, UserRole, Semester } from "./types";
 
-// Sample faculty data
+// Sample faculty data with usernames and passwords
 export const facultyData: Faculty[] = [
   {
     id: "fac-001",
@@ -9,7 +9,9 @@ export const facultyData: Faculty[] = [
     department: "Computer Science",
     email: "alan.turing@faculty.edu",
     phone: "555-123-4567",
-    status: "available"
+    status: "available",
+    username: "alan.turing",
+    password: "password123"
   },
   {
     id: "fac-002",
@@ -18,7 +20,9 @@ export const facultyData: Faculty[] = [
     email: "marie.curie@faculty.edu",
     phone: "555-234-5678",
     status: "absent",
-    substitutedBy: "fac-003"
+    substitutedBy: "fac-003",
+    username: "marie.curie",
+    password: "password123"
   },
   {
     id: "fac-003",
@@ -27,7 +31,9 @@ export const facultyData: Faculty[] = [
     email: "albert.einstein@faculty.edu",
     phone: "555-345-6789",
     status: "substituting",
-    substituting: "fac-002"
+    substituting: "fac-002",
+    username: "albert.einstein",
+    password: "password123"
   },
   {
     id: "fac-004",
@@ -35,7 +41,9 @@ export const facultyData: Faculty[] = [
     department: "Mathematics",
     email: "ada.lovelace@faculty.edu",
     phone: "555-456-7890",
-    status: "available"
+    status: "available",
+    username: "ada.lovelace",
+    password: "password123"
   },
   {
     id: "fac-005",
@@ -43,7 +51,9 @@ export const facultyData: Faculty[] = [
     department: "Electrical Engineering",
     email: "nikola.tesla@faculty.edu",
     phone: "555-567-8901",
-    status: "absent"
+    status: "absent",
+    username: "nikola.tesla",
+    password: "password123"
   },
   {
     id: "fac-006",
@@ -51,7 +61,9 @@ export const facultyData: Faculty[] = [
     department: "Computer Science",
     email: "grace.hopper@faculty.edu",
     phone: "555-678-9012",
-    status: "available"
+    status: "available",
+    username: "grace.hopper",
+    password: "password123"
   },
   {
     id: "fac-007",
@@ -60,9 +72,113 @@ export const facultyData: Faculty[] = [
     email: "isaac.newton@faculty.edu",
     phone: "555-789-0123",
     status: "substituted",
-    substitutedBy: "fac-006"
+    substitutedBy: "fac-006",
+    username: "isaac.newton",
+    password: "password123"
   },
 ];
+
+// Sample student data
+export const studentData: Student[] = [
+  {
+    id: "std-001",
+    name: "John Doe",
+    rollNumber: "CS-001",
+    semester: "1st",
+    department: "Computer Science",
+    email: "john.doe@student.edu",
+    username: "john.doe",
+    password: "password123"
+  },
+  {
+    id: "std-002",
+    name: "Jane Smith",
+    rollNumber: "CS-002",
+    semester: "1st",
+    department: "Computer Science",
+    email: "jane.smith@student.edu",
+    username: "jane.smith",
+    password: "password123"
+  },
+  {
+    id: "std-003",
+    name: "Michael Brown",
+    rollNumber: "PH-001",
+    semester: "2nd",
+    department: "Physics",
+    email: "michael.brown@student.edu",
+    username: "michael.brown",
+    password: "password123"
+  },
+  {
+    id: "std-004",
+    name: "Sarah Johnson",
+    rollNumber: "PH-002",
+    semester: "2nd",
+    department: "Physics",
+    email: "sarah.johnson@student.edu",
+    username: "sarah.johnson",
+    password: "password123"
+  },
+  {
+    id: "std-005",
+    name: "David Wilson",
+    rollNumber: "MA-001",
+    semester: "3rd",
+    department: "Mathematics",
+    email: "david.wilson@student.edu",
+    username: "david.wilson",
+    password: "password123"
+  },
+  {
+    id: "std-006",
+    name: "Emily Davis",
+    rollNumber: "EE-001",
+    semester: "4th",
+    department: "Electrical Engineering",
+    email: "emily.davis@student.edu",
+    username: "emily.davis",
+    password: "password123"
+  }
+];
+
+// Admin user
+export const adminUser: User = {
+  id: "admin-001",
+  username: "admin",
+  password: "admin",
+  role: "admin"
+};
+
+// Generate users from faculty and students
+export const generateUsers = (): User[] => {
+  const users: User[] = [adminUser];
+  
+  facultyData.forEach(faculty => {
+    users.push({
+      id: `user-${faculty.id}`,
+      username: faculty.username,
+      password: faculty.password,
+      role: "faculty",
+      facultyId: faculty.id
+    });
+  });
+  
+  studentData.forEach(student => {
+    users.push({
+      id: `user-${student.id}`,
+      username: student.username,
+      password: student.password,
+      role: "student",
+      studentId: student.id
+    });
+  });
+  
+  return users;
+};
+
+// Users data
+export const userData = generateUsers();
 
 // Time periods
 const periods = [
@@ -78,31 +194,43 @@ const periods = [
 
 // Course codes
 const courses = [
-  { code: "CS101", title: "Introduction to Computer Science" },
-  { code: "CS201", title: "Data Structures" },
-  { code: "CS301", title: "Algorithms" },
-  { code: "CS401", title: "Artificial Intelligence" },
-  { code: "PH101", title: "Introduction to Physics" },
-  { code: "PH201", title: "Mechanics" },
-  { code: "PH301", title: "Electromagnetism" },
-  { code: "PH401", title: "Quantum Mechanics" },
-  { code: "MA101", title: "Calculus I" },
-  { code: "MA201", title: "Linear Algebra" },
-  { code: "MA301", title: "Differential Equations" },
-  { code: "EE101", title: "Circuit Theory" },
-  { code: "EE201", title: "Digital Electronics" },
-];
-
-// Classroom locations
-const locations = [
-  "Room 101", "Room 102", "Room 103", "Room 201", "Room 202", 
-  "Lab A", "Lab B", "Lecture Hall 1", "Lecture Hall 2", "Seminar Room"
+  { code: "CS101", title: "Introduction to Computer Science", semester: "1st", department: "Computer Science" },
+  { code: "CS201", title: "Data Structures", semester: "2nd", department: "Computer Science" },
+  { code: "CS301", title: "Algorithms", semester: "3rd", department: "Computer Science" },
+  { code: "CS401", title: "Artificial Intelligence", semester: "4th", department: "Computer Science" },
+  { code: "PH101", title: "Introduction to Physics", semester: "1st", department: "Physics" },
+  { code: "PH201", title: "Mechanics", semester: "2nd", department: "Physics" },
+  { code: "PH301", title: "Electromagnetism", semester: "3rd", department: "Physics" },
+  { code: "PH401", title: "Quantum Mechanics", semester: "4th", department: "Physics" },
+  { code: "MA101", title: "Calculus I", semester: "1st", department: "Mathematics" },
+  { code: "MA201", title: "Linear Algebra", semester: "2nd", department: "Mathematics" },
+  { code: "MA301", title: "Differential Equations", semester: "3rd", department: "Mathematics" },
+  { code: "EE101", title: "Circuit Theory", semester: "1st", department: "Electrical Engineering" },
+  { code: "EE201", title: "Digital Electronics", semester: "2nd", department: "Electrical Engineering" },
 ];
 
 // Generate sample timetable data
 const days: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
+// Storage for all generated timetables to maintain consistency
+let allTimetables: Record<string, Period[]> = {};
+
+// Function to get today's day name
+export const getTodayDay = (): Day => {
+  const dayIndex = new Date().getDay() - 1; // 0 is Sunday in JS
+  if (dayIndex < 0 || dayIndex >= days.length) {
+    return "Monday"; // Default to Monday if weekend
+  }
+  return days[dayIndex];
+};
+
+// Generate timetable for a faculty
 export const generateTimetable = (facultyId: string): Period[] => {
+  // If we've already generated this timetable, return it
+  if (allTimetables[facultyId]) {
+    return allTimetables[facultyId];
+  }
+  
   const timetable: Period[] = [];
   const faculty = facultyData.find(f => f.id === facultyId);
   
@@ -122,10 +250,11 @@ export const generateTimetable = (facultyId: string): Period[] => {
     // Convert to actual period objects
     dayPeriods.forEach(periodIndex => {
       const period = periods[periodIndex];
-      const courseIndex = Math.floor(Math.random() * courses.length);
-      const course = courses[courseIndex];
-      const locationIndex = Math.floor(Math.random() * locations.length);
-      const location = locations[locationIndex];
+      
+      // Find courses in this faculty's department
+      const departmentCourses = courses.filter(c => c.department === faculty.department);
+      const courseIndex = Math.floor(Math.random() * departmentCourses.length);
+      const course = departmentCourses[courseIndex];
       
       let periodData: Period = {
         id: `${facultyId}-${day}-${period.number}`,
@@ -136,7 +265,8 @@ export const generateTimetable = (facultyId: string): Period[] => {
         courseCode: course.code,
         courseTitle: course.title,
         facultyId: facultyId,
-        location: location
+        semester: course.semester as Semester,
+        department: course.department
       };
       
       // If faculty is substituted, add original faculty
@@ -157,6 +287,9 @@ export const generateTimetable = (facultyId: string): Period[] => {
     });
   });
   
+  // Store this timetable
+  allTimetables[facultyId] = timetable;
+  
   return timetable;
 };
 
@@ -166,6 +299,25 @@ export const getAllTimetables = () => {
     facultyId: faculty.id,
     periods: generateTimetable(faculty.id)
   }));
+};
+
+// Get timetable for a specific semester and department
+export const getTimetableBySemesterAndDepartment = (semester: Semester, department: string): Period[] => {
+  let allPeriods: Period[] = [];
+  
+  // Get all faculty timetables
+  facultyData.forEach(faculty => {
+    const facultyTimetable = generateTimetable(faculty.id);
+    
+    // Filter periods by semester and department
+    const filteredPeriods = facultyTimetable.filter(
+      period => period.semester === semester && period.department === department
+    );
+    
+    allPeriods = [...allPeriods, ...filteredPeriods];
+  });
+  
+  return allPeriods;
 };
 
 // Get faculty status counts
@@ -184,9 +336,26 @@ export const getFacultyById = (id: string) => {
   return facultyData.find(faculty => faculty.id === id);
 };
 
+// Function to get a student by ID
+export const getStudentById = (id: string) => {
+  return studentData.find(student => student.id === id);
+};
+
 // Function to get a faculty's timetable
 export const getFacultyTimetable = (id: string) => {
   return generateTimetable(id);
+};
+
+// Function to get a faculty's timetable for today
+export const getFacultyTimetableForToday = (id: string) => {
+  const todayDay = getTodayDay();
+  return generateTimetable(id).filter(period => period.day === todayDay);
+};
+
+// Function to authenticate a user
+export const authenticateUser = (username: string, password: string): User | null => {
+  const user = userData.find(u => u.username === username && u.password === password);
+  return user || null;
 };
 
 // Update a faculty's status
@@ -205,10 +374,89 @@ export const updateFacultyStatus = (
       substitutedBy,
       substituting
     };
+    
+    // Clear the cached timetable to regenerate with new status
+    if (allTimetables[id]) {
+      delete allTimetables[id];
+    }
+    
     return facultyData[facultyIndex];
   }
   
   return null;
+};
+
+// Find faculty members who can substitute based on criteria
+export const findPotentialSubstitutes = (period: Period, absentFacultyId: string): Faculty[] => {
+  const absentFaculty = getFacultyById(absentFacultyId);
+  if (!absentFaculty) return [];
+  
+  // Filter faculty by department
+  const sameDeptFaculty = facultyData.filter(f => 
+    f.id !== absentFacultyId && 
+    f.department === absentFaculty.department && 
+    f.status === 'available'
+  );
+  
+  // Check which faculty members are free during this period
+  return sameDeptFaculty.filter(faculty => {
+    const facultyTimetable = getFacultyTimetable(faculty.id);
+    // Check if faculty has no class at this time on this day
+    const conflictingPeriod = facultyTimetable.find(p => 
+      p.day === period.day && 
+      p.periodNumber === period.periodNumber
+    );
+    
+    return !conflictingPeriod;
+  });
+};
+
+// Attempt to assign substitute for a period
+export const assignSubstitute = (periodId: string, absentFacultyId: string): { success: boolean; message: string; newFacultyId?: string } => {
+  // Find the period
+  let foundPeriod: Period | undefined;
+  let foundFacultyTimetable: Period[] = [];
+  
+  // Search through all timetables (inefficient but works for demo)
+  facultyData.forEach(faculty => {
+    const timetable = generateTimetable(faculty.id);
+    const period = timetable.find(p => p.id === periodId);
+    if (period) {
+      foundPeriod = period;
+      foundFacultyTimetable = timetable;
+    }
+  });
+  
+  if (!foundPeriod) {
+    return { success: false, message: "Period not found" };
+  }
+  
+  // Find potential substitutes
+  const potentialSubstitutes = findPotentialSubstitutes(foundPeriod, absentFacultyId);
+  
+  if (potentialSubstitutes.length === 0) {
+    return { 
+      success: false, 
+      message: "No eligible substitutes found. Need faculty from same department who are available during this time slot." 
+    };
+  }
+  
+  // Select first available substitute
+  const substitute = potentialSubstitutes[0];
+  
+  // Update faculty status
+  updateFacultyStatus(absentFacultyId, 'absent', substitute.id);
+  updateFacultyStatus(substitute.id, 'substituting', absentFacultyId);
+  
+  // Clear cached timetables to regenerate
+  delete allTimetables[absentFacultyId];
+  delete allTimetables[substitute.id];
+  
+  return { 
+    success: true, 
+    message: `Substitution assigned successfully. ${substitute.name} will substitute for this period.`,
+    newFacultyId: substitute.id
+  };
 };
 
 // Add a new faculty member
@@ -216,7 +464,35 @@ export const addFaculty = (faculty: Omit<Faculty, 'id'>) => {
   const newId = `fac-${String(facultyData.length + 1).padStart(3, '0')}`;
   const newFaculty = { ...faculty, id: newId };
   facultyData.push(newFaculty);
+  
+  // Add corresponding user
+  userData.push({
+    id: `user-${newId}`,
+    username: faculty.username,
+    password: faculty.password,
+    role: "faculty",
+    facultyId: newId
+  });
+  
   return newFaculty;
+};
+
+// Add a new student
+export const addStudent = (student: Omit<Student, 'id'>) => {
+  const newId = `std-${String(studentData.length + 1).padStart(3, '0')}`;
+  const newStudent = { ...student, id: newId };
+  studentData.push(newStudent);
+  
+  // Add corresponding user
+  userData.push({
+    id: `user-${newId}`,
+    username: student.username,
+    password: student.password,
+    role: "student",
+    studentId: newId
+  });
+  
+  return newStudent;
 };
 
 // Remove a faculty member
@@ -224,7 +500,64 @@ export const removeFaculty = (id: string) => {
   const index = facultyData.findIndex(f => f.id === id);
   if (index >= 0) {
     facultyData.splice(index, 1);
+    
+    // Remove from cached timetables
+    if (allTimetables[id]) {
+      delete allTimetables[id];
+    }
+    
+    // Remove corresponding user
+    const userIndex = userData.findIndex(u => u.facultyId === id);
+    if (userIndex >= 0) {
+      userData.splice(userIndex, 1);
+    }
+    
     return true;
   }
   return false;
+};
+
+// Remove a student
+export const removeStudent = (id: string) => {
+  const index = studentData.findIndex(s => s.id === id);
+  if (index >= 0) {
+    studentData.splice(index, 1);
+    
+    // Remove corresponding user
+    const userIndex = userData.findIndex(u => u.studentId === id);
+    if (userIndex >= 0) {
+      userData.splice(userIndex, 1);
+    }
+    
+    return true;
+  }
+  return false;
+};
+
+// Update a student
+export const updateStudent = (id: string, data: Partial<Student>) => {
+  const studentIndex = studentData.findIndex(s => s.id === id);
+  
+  if (studentIndex >= 0) {
+    studentData[studentIndex] = {
+      ...studentData[studentIndex],
+      ...data
+    };
+    
+    // Update user if username/password changed
+    if (data.username || data.password) {
+      const userIndex = userData.findIndex(u => u.studentId === id);
+      if (userIndex >= 0) {
+        userData[userIndex] = {
+          ...userData[userIndex],
+          username: data.username || userData[userIndex].username,
+          password: data.password || userData[userIndex].password
+        };
+      }
+    }
+    
+    return studentData[studentIndex];
+  }
+  
+  return null;
 };

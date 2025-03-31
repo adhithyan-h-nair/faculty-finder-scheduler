@@ -3,6 +3,10 @@ export type FacultyStatus = 'available' | 'absent' | 'substituting' | 'substitut
 
 export type Day = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
 
+export type UserRole = 'admin' | 'faculty' | 'student';
+
+export type Semester = '1st' | '2nd' | '3rd' | '4th' | '5th' | '6th' | '7th' | '8th';
+
 export interface Faculty {
   id: string;
   name: string;
@@ -12,6 +16,8 @@ export interface Faculty {
   status: FacultyStatus;
   substitutedBy?: string; // faculty ID
   substituting?: string; // faculty ID
+  username: string;
+  password: string;
 }
 
 export interface Period {
@@ -24,7 +30,8 @@ export interface Period {
   courseTitle: string;
   facultyId: string;
   originalFacultyId?: string; // Only set if being substituted
-  location?: string; // classroom or location
+  semester: Semester;
+  department: string;
 }
 
 export interface Timetable {
@@ -37,4 +44,24 @@ export interface StatusCount {
   absent: number;
   substituting: number;
   substituted: number;
+}
+
+export interface Student {
+  id: string;
+  name: string;
+  rollNumber: string;
+  semester: Semester;
+  department: string;
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface User {
+  id: string;
+  role: UserRole;
+  username: string;
+  password: string;
+  facultyId?: string;
+  studentId?: string;
 }
