@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, Dialog } from '@/components/ui/dialog';
 import { Period, Day } from '@/lib/types';
@@ -37,7 +36,8 @@ const TimetableEditDialog = ({
     periodNumber: 1,
     startTime: '08:00',
     endTime: '08:50',
-    location: '',
+    semester: '1st' as const,
+    department: '',
     facultyId: facultyId,
     substituteFacultyId: ''
   });
@@ -54,13 +54,15 @@ const TimetableEditDialog = ({
         periodNumber: period.periodNumber,
         startTime: period.startTime,
         endTime: period.endTime,
-        location: period.location || '',
+        semester: period.semester,
+        department: period.department,
         facultyId: period.facultyId,
         substituteFacultyId: period.originalFacultyId || ''
       });
       setIsSubstitute(!!period.originalFacultyId);
     } else {
       // Default for new period
+      const faculty = getFacultyById(facultyId);
       setFormData({
         courseCode: '',
         courseTitle: '',
@@ -68,7 +70,8 @@ const TimetableEditDialog = ({
         periodNumber: 1,
         startTime: '08:00',
         endTime: '08:50',
-        location: '',
+        semester: '1st',
+        department: faculty?.department || '',
         facultyId: facultyId,
         substituteFacultyId: ''
       });
@@ -154,7 +157,7 @@ const TimetableEditDialog = ({
               <Label htmlFor="day">Day</Label>
               <Select 
                 value={formData.day} 
-                onValueChange={(value) => handleChange('day', value)}
+                onValueChange={(value) => handleChange('day', value as Day)}
               >
                 <SelectTrigger id="day" className="bg-white">
                   <SelectValue placeholder="Select day" />
@@ -213,15 +216,39 @@ const TimetableEditDialog = ({
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => handleChange('location', e.target.value)}
-              placeholder="e.g. Room 101, Building A"
-              className="bg-white"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="semester">Semester</Label>
+              <Select 
+                value={formData.semester} 
+                onValueChange={(value) => handleChange('semester', value)}
+              >
+                <SelectTrigger id="semester" className="bg-white">
+                  <SelectValue placeholder="Select semester" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="1st">1st Semester</SelectItem>
+                  <SelectItem value="2nd">2nd Semester</SelectItem>
+                  <SelectItem value="3rd">3rd Semester</SelectItem>
+                  <SelectItem value="4th">4th Semester</SelectItem>
+                  <SelectItem value="5th">5th Semester</SelectItem>
+                  <SelectItem value="6th">6th Semester</SelectItem>
+                  <SelectItem value="7th">7th Semester</SelectItem>
+                  <SelectItem value="8th">8th Semester</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={formData.department}
+                onChange={(e) => handleChange('department', e.target.value)}
+                placeholder="e.g. Computer Science"
+                className="bg-white"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

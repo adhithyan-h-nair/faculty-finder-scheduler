@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Period, Day, Semester } from '@/lib/types';
 import PeriodCard from './PeriodCard';
@@ -43,12 +42,10 @@ const TimetableView = ({
   const semesters: Semester[] = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const todayDay = getTodayDay();
   
-  // Apply semester filter if selected
   const filteredPeriods = semesterFilter === 'all' 
     ? periods 
     : periods.filter(period => period.semester === semesterFilter);
   
-  // Further filter by day
   const periodsByDay = days.reduce<Record<Day, Period[]>>((acc, day) => {
     acc[day] = filteredPeriods.filter(period => period.day === day)
       .sort((a, b) => a.periodNumber - b.periodNumber);
@@ -61,7 +58,6 @@ const TimetableView = ({
     Friday: []
   });
   
-  // For display - show today only or selected day
   const visiblePeriods = showTodayOnly 
     ? periodsByDay[todayDay] 
     : periodsByDay[selectedDay];
@@ -141,7 +137,7 @@ const TimetableView = ({
       case 'Wednesday': return { short: 'Wed', full: 'Wednesday' };
       case 'Thursday': return { short: 'Thu', full: 'Thursday' };
       case 'Friday': return { short: 'Fri', full: 'Friday' };
-      default: return { short: day.substring(0, 3), full: day };
+      default: return { short: day.slice(0, 3), full: day };
     }
   };
   

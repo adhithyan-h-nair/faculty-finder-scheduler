@@ -98,7 +98,9 @@ const FacultyForm = ({ open, onOpenChange, onSave, editFaculty }: FacultyFormPro
           department: data.department,
           email: data.email,
           status: data.status,
-          phone: data.phone
+          phone: data.phone,
+          username: data.email.split('@')[0], // Generate username from email
+          password: 'password123' // Default password
         };
         
         const newFaculty = addFaculty(newFacultyData);
