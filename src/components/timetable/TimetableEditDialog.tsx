@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription, Dialog } from '@/components/ui/dialog';
-import { Period, Day } from '@/lib/types';
+import { Period, Day, Semester } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -36,7 +37,7 @@ const TimetableEditDialog = ({
     periodNumber: 1,
     startTime: '08:00',
     endTime: '08:50',
-    semester: '1st' as const,
+    semester: '1st' as Semester, // Fix: explicitly cast as Semester type
     department: '',
     facultyId: facultyId,
     substituteFacultyId: ''
@@ -221,7 +222,7 @@ const TimetableEditDialog = ({
               <Label htmlFor="semester">Semester</Label>
               <Select 
                 value={formData.semester} 
-                onValueChange={(value) => handleChange('semester', value)}
+                onValueChange={(value) => handleChange('semester', value as Semester)}
               >
                 <SelectTrigger id="semester" className="bg-white">
                   <SelectValue placeholder="Select semester" />
