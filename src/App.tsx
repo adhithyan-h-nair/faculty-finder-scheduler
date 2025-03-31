@@ -33,12 +33,16 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, all
 };
 
 const AuthenticatedApp = () => {
-  const { role } = useAuth();
+  const { isAuthenticated } = useAuth();
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
   
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Navigate to="/dashboard" />} />
       <Route path="/dashboard" element={
         <ProtectedRoute allowedRoles={['admin', 'faculty', 'student']}>
           <Dashboard />
@@ -69,18 +73,25 @@ const AuthenticatedApp = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthenticatedApp />
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/*" element={<AuthenticatedApp />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
