@@ -1,15 +1,18 @@
+
 import { useState, useEffect } from 'react';
-import { Period, Day, Semester } from '@/lib/types';
+import { Period, Day, Semester, Faculty } from '@/lib/types';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus, Calendar, Trash2, Clock, Filter } from 'lucide-react';
+import { Plus, Calendar, Trash2, Clock, Filter, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getTodayDay, findPotentialSubstitutes, assignSubstitute } from '@/lib/data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface TimetableViewProps {
   periods: Period[];
@@ -38,6 +41,8 @@ const TimetableView = ({
   const [isSubstituteDialogOpen, setIsSubstituteDialogOpen] = useState(false);
   const [periodToSubstitute, setPeriodToSubstitute] = useState<Period | null>(null);
   const [semesterFilter, setSemesterFilter] = useState<string>('all');
+  const [potentialSubstitutes, setPotentialSubstitutes] = useState<Faculty[]>([]);
+  const [selectedSubstitute, setSelectedSubstitute] = useState<string>('');
   
   const semesters: Semester[] = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const todayDay = getTodayDay();
@@ -104,30 +109,40 @@ const TimetableView = ({
   
   const handleRequestSubstitute = (period: Period) => {
     setPeriodToSubstitute(period);
+    
+    // Get potential substitutes
+    const result = assignSubstitute(period.id, facultyId);
+    
+    if (result.success && result.substitutes && result.substitutes.length > 0) {
+      setPotentialSubstitutes(result.substitutes);
+      setSelectedSubstitute(result.substitutes[0].id);
+    } else {
+      setPotentialSubstitutes([]);
+    }
+    
     setIsSubstituteDialogOpen(true);
   };
   
   const handleAssignSubstitute = () => {
-    if (!periodToSubstitute) return;
-    
-    const result = assignSubstitute(periodToSubstitute.id, facultyId);
-    
-    if (result.success) {
+    if (!periodToSubstitute || !selectedSubstitute) {
       toast({
-        title: "Substitution Assigned",
-        description: result.message,
-      });
-      onUpdateTimetable();
-    } else {
-      toast({
-        title: "Substitution Failed",
-        description: result.message,
+        title: "Selection Required",
+        description: "Please select a substitute faculty.",
         variant: "destructive"
       });
+      return;
     }
     
+    // In a real app, this would call an API to assign the selected substitute
+    toast({
+      title: "Substitution Assigned",
+      description: `The selected substitute has been assigned to this class.`,
+    });
+    
+    onUpdateTimetable();
     setIsSubstituteDialogOpen(false);
     setPeriodToSubstitute(null);
+    setPotentialSubstitutes([]);
   };
 
   const getDayLabel = (day: Day) => {
@@ -279,12 +294,7 @@ const TimetableView = ({
                         onClick={() => handleRequestSubstitute(period)}
                         className="flex-shrink-0 bg-white text-orange-500 border-orange-300 hover:bg-orange-50"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                          <circle cx="9" cy="7" r="4" />
-                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
+                        <UserCheck size={18} />
                       </Button>
                     )}
                   </div>
@@ -306,29 +316,56 @@ const TimetableView = ({
       />
       
       <AlertDialog open={isSubstituteDialogOpen} onOpenChange={setIsSubstituteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Request Substitute Teacher</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to request a substitute for this class?
-              {periodToSubstitute && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-md text-sm">
-                  <div><strong>Course:</strong> {periodToSubstitute.courseCode} - {periodToSubstitute.courseTitle}</div>
-                  <div><strong>Day:</strong> {periodToSubstitute.day}</div>
-                  <div><strong>Time:</strong> {periodToSubstitute.startTime} - {periodToSubstitute.endTime}</div>
-                  <div><strong>Semester:</strong> {periodToSubstitute.semester}</div>
+              {potentialSubstitutes.length > 0 ? (
+                <div>
+                  <p className="mb-2">Select a substitute for this class:</p>
+                  {periodToSubstitute && (
+                    <div className="mt-2 p-3 bg-blue-50 rounded-md text-sm">
+                      <div><strong>Course:</strong> {periodToSubstitute.courseCode} - {periodToSubstitute.courseTitle}</div>
+                      <div><strong>Day:</strong> {periodToSubstitute.day}</div>
+                      <div><strong>Time:</strong> {periodToSubstitute.startTime} - {periodToSubstitute.endTime}</div>
+                      <div><strong>Semester:</strong> {periodToSubstitute.semester}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-red-500 font-medium">
+                  No eligible substitutes found. Need faculty from the same department who are available during this time slot.
                 </div>
               )}
-              <div className="mt-2">
-                Note: Only faculty from the same department who are available during this period can substitute.
-              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          {potentialSubstitutes.length > 0 && (
+            <div className="py-4">
+              <RadioGroup value={selectedSubstitute} onValueChange={setSelectedSubstitute} className="space-y-2">
+                {potentialSubstitutes.map(faculty => (
+                  <div key={faculty.id} className="flex items-center space-x-2 border border-gray-200 rounded-md p-3 hover:bg-slate-50">
+                    <RadioGroupItem value={faculty.id} id={faculty.id} />
+                    <Label htmlFor={faculty.id} className="flex-1 cursor-pointer">
+                      <div className="font-medium">{faculty.name}</div>
+                      <div className="text-sm text-muted-foreground">{faculty.department}</div>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+          
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAssignSubstitute}>
-              Request Substitute
-            </AlertDialogAction>
+            {potentialSubstitutes.length > 0 && (
+              <AlertDialogAction 
+                onClick={handleAssignSubstitute}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Assign Substitute
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

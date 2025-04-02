@@ -1,4 +1,3 @@
-
 import { Faculty, Period, FacultyStatus, Day, Student, User, UserRole, Semester } from "./types";
 
 // Sample faculty data with usernames and passwords
@@ -386,12 +385,12 @@ export const updateFacultyStatus = (
   return null;
 };
 
-// Find faculty members who can substitute based on criteria
+// Find faculty members who can substitute based on enhanced criteria
 export const findPotentialSubstitutes = (period: Period, absentFacultyId: string): Faculty[] => {
   const absentFaculty = getFacultyById(absentFacultyId);
   if (!absentFaculty) return [];
   
-  // Filter faculty by department
+  // First, find all faculty in the same department
   const sameDeptFaculty = facultyData.filter(f => 
     f.id !== absentFacultyId && 
     f.department === absentFaculty.department && 
@@ -399,7 +398,7 @@ export const findPotentialSubstitutes = (period: Period, absentFacultyId: string
   );
   
   // Check which faculty members are free during this period
-  return sameDeptFaculty.filter(faculty => {
+  const availableFaculty = sameDeptFaculty.filter(faculty => {
     const facultyTimetable = getFacultyTimetable(faculty.id);
     // Check if faculty has no class at this time on this day
     const conflictingPeriod = facultyTimetable.find(p => 
@@ -409,10 +408,31 @@ export const findPotentialSubstitutes = (period: Period, absentFacultyId: string
     
     return !conflictingPeriod;
   });
+  
+  // Enhanced criteria: Prioritize faculty who teach the same semester
+  return availableFaculty.sort((a, b) => {
+    const facultyATimetable = getFacultyTimetable(a.id);
+    const facultyBTimetable = getFacultyTimetable(b.id);
+    
+    // Check if either faculty teaches the same semester as the period
+    const aTeachesSameSemester = facultyATimetable.some(p => p.semester === period.semester);
+    const bTeachesSameSemester = facultyBTimetable.some(p => p.semester === period.semester);
+    
+    if (aTeachesSameSemester && !bTeachesSameSemester) return -1;
+    if (!aTeachesSameSemester && bTeachesSameSemester) return 1;
+    
+    // If both or neither teach the same semester, prioritize by teaching load
+    return facultyATimetable.length - facultyBTimetable.length;
+  });
 };
 
-// Attempt to assign substitute for a period
-export const assignSubstitute = (periodId: string, absentFacultyId: string): { success: boolean; message: string; newFacultyId?: string } => {
+// Attempt to assign substitute for a period with multiple options
+export const assignSubstitute = (periodId: string, absentFacultyId: string): { 
+  success: boolean; 
+  message: string; 
+  newFacultyId?: string;
+  substitutes?: Faculty[];
+} => {
   // Find the period
   let foundPeriod: Period | undefined;
   let foundFacultyTimetable: Period[] = [];
@@ -441,10 +461,10 @@ export const assignSubstitute = (periodId: string, absentFacultyId: string): { s
     };
   }
   
-  // Select first available substitute
+  // Return all potential substitutes but select the first one as default
   const substitute = potentialSubstitutes[0];
   
-  // Update faculty status
+  // Update faculty status for the default substitute
   updateFacultyStatus(absentFacultyId, 'absent', substitute.id);
   updateFacultyStatus(substitute.id, 'substituting', absentFacultyId);
   
@@ -454,8 +474,9 @@ export const assignSubstitute = (periodId: string, absentFacultyId: string): { s
   
   return { 
     success: true, 
-    message: `Substitution assigned successfully. ${substitute.name} will substitute for this period.`,
-    newFacultyId: substitute.id
+    message: `${potentialSubstitutes.length} potential substitute(s) found. ${substitute.name} has been assigned as default.`,
+    newFacultyId: substitute.id,
+    substitutes: potentialSubstitutes
   };
 };
 
