@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole } from '@/lib/types';
 import { BookOpen, Lock, User } from 'lucide-react';
-import { format } from 'date-fns'; // Added import for format function
+import { format } from 'date-fns';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -40,11 +41,11 @@ const Login = () => {
     }
   };
   
-  // Quick login buttons for demo purposes
+  // Quick login buttons for demo purposes (without revealing credentials)
   const demoLogins = {
-    admin: { username: 'admin', password: 'admin' },
-    faculty: { username: 'alan.turing', password: 'password123' },
-    student: { username: 'john.doe', password: 'password123' }
+    admin: { username: 'admin', password: 'admin123' },
+    faculty: { username: 'faculty', password: 'faculty123' },
+    student: { username: 'student', password: 'student123' }
   };
   
   const handleQuickLogin = async (role: UserRole) => {
@@ -186,7 +187,7 @@ const Login = () => {
                     onClick={() => handleQuickLogin('admin')}
                     className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                   >
-                    Login as Admin (admin/admin)
+                    Login as Admin
                   </Button>
                 </div>
               </CardContent>
@@ -242,7 +243,7 @@ const Login = () => {
                     onClick={() => handleQuickLogin('faculty')}
                     className="w-full border-violet-300 text-violet-700 hover:bg-violet-50"
                   >
-                    Login as Dr. Turing (alan.turing/password123)
+                    Login as Faculty
                   </Button>
                 </div>
               </CardContent>
@@ -298,7 +299,7 @@ const Login = () => {
                     onClick={() => handleQuickLogin('student')}
                     className="w-full border-rose-300 text-rose-700 hover:bg-rose-50"
                   >
-                    Login as John Doe (john.doe/password123)
+                    Login as Student
                   </Button>
                 </div>
               </CardContent>
