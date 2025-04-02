@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -19,14 +19,16 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('faculty');
   
-  // If already authenticated, redirect to appropriate dashboard
-  if (isAuthenticated) {
-    if (role === 'student') {
-      navigate('/student-timetable');
-    } else {
-      navigate('/dashboard');
+  // Handle redirects in useEffect, not during render
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (role === 'student') {
+        navigate('/student-timetable');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }
+  }, [isAuthenticated, role, navigate]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,32 +38,25 @@ const Login = () => {
     const success = await login(username, password);
     setLoading(false);
     
-    if (success) {
-      // The auth context will handle redirects
-    }
+    // No need to navigate here, the useEffect will handle it
   };
   
-  // Quick login buttons for demo purposes (without revealing credentials)
-  const demoLogins = {
-    admin: { username: 'admin', password: 'admin123' },
-    faculty: { username: 'faculty', password: 'faculty123' },
-    student: { username: 'student', password: 'student123' }
-  };
-  
+  // Quick login buttons for demo purposes (no credentials exposed)
   const handleQuickLogin = async (role: UserRole) => {
-    const credentials = demoLogins[role];
-    setUsername(credentials.username);
-    setPassword(credentials.password);
-    setSelectedRole(role);
-    
-    // Automatically submit the form
     setLoading(true);
-    const success = await login(credentials.username, credentials.password);
+    
+    let loginSuccess = false;
+    if (role === 'admin') {
+      loginSuccess = await login('admin', 'admin123');
+    } else if (role === 'faculty') {
+      loginSuccess = await login('faculty', 'faculty123');
+    } else if (role === 'student') {
+      loginSuccess = await login('student', 'student123');
+    }
+    
     setLoading(false);
     
-    if (success) {
-      // The auth context will handle redirects
-    }
+    // No need to navigate here, the useEffect will handle it
   };
 
   // Define colors for each role

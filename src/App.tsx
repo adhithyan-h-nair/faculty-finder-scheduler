@@ -32,65 +32,59 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, all
   return children;
 };
 
-const AuthenticatedApp = () => {
-  const { isAuthenticated } = useAuth();
-  
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-  
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" />} />
-      <Route path="/dashboard" element={
-        <ProtectedRoute allowedRoles={['admin', 'faculty', 'student']}>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      <Route path="/faculty" element={
-        <ProtectedRoute allowedRoles={['admin', 'faculty']}>
-          <Faculty />
-        </ProtectedRoute>
-      } />
-      <Route path="/timetable" element={
-        <ProtectedRoute allowedRoles={['admin', 'faculty']}>
-          <Timetable />
-        </ProtectedRoute>
-      } />
-      <Route path="/student-timetable" element={
-        <ProtectedRoute allowedRoles={['student']}>
-          <StudentTimetable />
-        </ProtectedRoute>
-      } />
-      <Route path="/student-management" element={
-        <ProtectedRoute allowedRoles={['admin']}>
-          <StudentManagement />
-        </ProtectedRoute>
-      } />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
-
 const App = () => {
-  const { isAuthenticated } = useAuth();
-  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/*" element={<AuthenticatedApp />} />
-            </Routes>
-          </BrowserRouter>
+          <AppContent />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
+  );
+};
+
+// Separate component to use auth context
+const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin', 'faculty', 'student']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/faculty" element={
+            <ProtectedRoute allowedRoles={['admin', 'faculty']}>
+              <Faculty />
+            </ProtectedRoute>
+          } />
+          <Route path="/timetable" element={
+            <ProtectedRoute allowedRoles={['admin', 'faculty']}>
+              <Timetable />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-timetable" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentTimetable />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-management" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <StudentManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 };
 
