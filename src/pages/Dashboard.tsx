@@ -6,9 +6,11 @@ import PageContainer from '@/components/layout/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getFacultyById, getStudentById, getTodayDay, getFacultyStatusCounts, facultyData, studentData } from '@/lib/data';
-import { Calendar, Users, BookOpen, LogOut, Clock, PieChart, School, BookCopy, CalendarClock } from 'lucide-react';
+import { Calendar, Users, BookOpen, LogOut, Clock, PieChart, School, BookCopy, CalendarClock, Bell } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RPieChart, Pie, Cell, Legend } from 'recharts';
+import { format } from 'date-fns';
+import SubstitutionLog from '@/components/admin/SubstitutionLog';
 
 const Dashboard = () => {
   const { role, logout, facultyId, studentId } = useAuth();
@@ -18,6 +20,7 @@ const Dashboard = () => {
   const faculty = facultyId ? getFacultyById(facultyId) : null;
   const student = studentId ? getStudentById(studentId) : null;
   const today = getTodayDay();
+  const currentDate = new Date();
   
   // Prepare data for admin dashboard
   const statusCounts = getFacultyStatusCounts();
@@ -93,12 +96,55 @@ const Dashboard = () => {
                   role === 'faculty' ? `Department: ${faculty?.department}` : 
                   `${student?.department}, Semester: ${student?.semester}`}
               </p>
+              
+              {role === 'admin' && (
+                <div className="mt-3 text-sm font-medium">
+                  <span className="text-blue-600">Admin Login: </span>
+                  <span className="text-gray-600">username: admin, password: admin</span>
+                </div>
+              )}
+              
+              {role === 'faculty' && faculty && (
+                <div className="mt-3 text-sm font-medium">
+                  <div>
+                    <span className="text-blue-600">Username: </span>
+                    <span className="text-gray-600">{faculty.username}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-600">Password: </span>
+                    <span className="text-gray-600">{faculty.password}</span>
+                  </div>
+                </div>
+              )}
+              
+              {role === 'student' && student && (
+                <div className="mt-3 text-sm font-medium">
+                  <div>
+                    <span className="text-blue-600">Username: </span>
+                    <span className="text-gray-600">{student.username}</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-600">Password: </span>
+                    <span className="text-gray-600">{student.password}</span>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-md">
-              <Clock size={18} className="text-blue-600" />
-              <div className="text-sm">
-                <span className="text-muted-foreground">Today is </span>
-                <span className="font-semibold text-blue-600">{today}</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-md">
+                <Clock size={18} className="text-blue-600" />
+                <div className="text-sm">
+                  <span className="text-gray-600">Today is </span>
+                  <span className="font-semibold text-blue-600">{today}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-indigo-50 px-3 py-2 rounded-md">
+                <Calendar size={18} className="text-indigo-600" />
+                <div className="text-sm">
+                  <span className="font-semibold text-indigo-600">
+                    {format(currentDate, 'MMMM d, yyyy')}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -204,25 +250,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
               
-              <Card className="bg-white shadow-sm">
-                <CardHeader>
-                  <CardTitle>Department Distribution</CardTitle>
-                  <CardDescription>Faculty members by department</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={departmentData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#8884d8" name="Faculty Count" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
+              <SubstitutionLog />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -429,7 +457,7 @@ const Dashboard = () => {
             onClick={() => navigate('/faculty')}
           >
             <Users size={32} />
-            <div className="text-lg font-semibold">Faculty Management</div>
+            <div className="text-lg font-semibold">Faculty Directory</div>
             <div className="text-sm opacity-90">View faculty details and status</div>
           </Button>
         </div>

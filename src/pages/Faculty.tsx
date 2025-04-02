@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import PageContainer from '@/components/layout/PageContainer';
 import FacultyCard from '@/components/faculty/FacultyCard';
 import FacultyForm from '@/components/faculty/FacultyForm';
@@ -9,12 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Faculty, FacultyStatus } from '@/lib/types';
 import { facultyData, getFacultyById, removeFaculty } from '@/lib/data';
-import { UserPlus, Search } from 'lucide-react';
+import { UserPlus, Search, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const FacultyPage = () => {
   const { toast } = useToast();
+  const { role } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [facultyList, setFacultyList] = useState<Faculty[]>([]);
   const [filteredList, setFilteredList] = useState<Faculty[]>([]);
@@ -22,11 +25,13 @@ const FacultyPage = () => {
   const [statusFilter, setStatusFilter] = useState<FacultyStatus | 'all'>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editFaculty, setEditFaculty] = useState<Faculty | undefined>(undefined);
+  const isAdmin = role === 'admin';
+  const currentDate = new Date();
   
   // Handle query param for editing
   useEffect(() => {
     const editId = searchParams.get('edit');
-    if (editId) {
+    if (editId && isAdmin) {
       const faculty = getFacultyById(editId);
       if (faculty) {
         setEditFaculty(faculty);
@@ -35,7 +40,7 @@ const FacultyPage = () => {
         setSearchParams({});
       }
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, isAdmin]);
   
   // Load faculty data
   useEffect(() => {
@@ -68,16 +73,41 @@ const FacultyPage = () => {
   }, [facultyList, searchTerm, statusFilter]);
   
   const handleAddNew = () => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can add new faculty members.",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditFaculty(undefined);
     setIsFormOpen(true);
   };
   
   const handleEdit = (faculty: Faculty) => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can edit faculty information.",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditFaculty(faculty);
     setIsFormOpen(true);
   };
   
   const handleDelete = (faculty: Faculty) => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can remove faculty members.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const success = removeFaculty(faculty.id);
     if (success) {
       toast({
@@ -116,7 +146,7 @@ const FacultyPage = () => {
   
   return (
     <PageContainer>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold mb-1">Faculty Management</h1>
           <p className="text-muted-foreground">
@@ -124,10 +154,21 @@ const FacultyPage = () => {
           </p>
         </div>
         
-        <Button onClick={handleAddNew} className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm">
-          <UserPlus size={16} className="mr-2" />
-          Add Faculty
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-md">
+            <Calendar size={18} className="text-blue-600" />
+            <span className="text-sm font-medium">
+              {format(currentDate, 'EEEE, MMMM d, yyyy')}
+            </span>
+          </div>
+          
+          {isAdmin && (
+            <Button onClick={handleAddNew} className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm">
+              <UserPlus size={16} className="mr-2" />
+              Add Faculty
+            </Button>
+          )}
+        </div>
       </div>
       
       {/* Filters */}
@@ -195,7 +236,7 @@ const FacultyPage = () => {
               onUpdate={handleFormSave}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              showControls={true}
+              showControls={isAdmin}
             />
           ))
         )}

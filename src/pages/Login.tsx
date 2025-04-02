@@ -62,6 +62,33 @@ const Login = () => {
       // The auth context will handle redirects
     }
   };
+
+  // Define colors for each role
+  const roleColors = {
+    admin: {
+      primary: 'from-emerald-600 to-blue-600',
+      secondary: 'bg-emerald-600',
+      tertiary: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+      accent: 'text-emerald-600',
+      input: 'border-emerald-200 focus:border-emerald-500'
+    },
+    faculty: {
+      primary: 'from-violet-600 to-purple-600',
+      secondary: 'bg-violet-600',
+      tertiary: 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100',
+      accent: 'text-violet-600',
+      input: 'border-violet-200 focus:border-violet-500'
+    },
+    student: {
+      primary: 'from-rose-500 to-pink-600',
+      secondary: 'bg-rose-600',
+      tertiary: 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100',
+      accent: 'text-rose-600',
+      input: 'border-rose-200 focus:border-rose-500'
+    }
+  };
+  
+  const activeColors = roleColors[selectedRole];
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-4">
@@ -69,12 +96,15 @@ const Login = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 text-indigo-800">Faculty Scheduler</h1>
           <p className="text-purple-600">Manage faculty timetables and assignments effectively</p>
+          <div className="mt-2 text-sm text-gray-600">
+            {format(new Date(), 'EEEE, MMMM d, yyyy')}
+          </div>
         </div>
         
         <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm overflow-hidden">
-          <CardHeader className="space-y-1 text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+          <CardHeader className={`space-y-1 text-center bg-gradient-to-r ${activeColors.primary} text-white`}>
             <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-            <CardDescription className="text-purple-100">
+            <CardDescription className="text-white/80">
               Access your account to continue
             </CardDescription>
           </CardHeader>
@@ -88,19 +118,19 @@ const Login = () => {
             <TabsList className="grid w-full grid-cols-3 bg-gray-100">
               <TabsTrigger 
                 value="admin" 
-                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
               >
                 Admin
               </TabsTrigger>
               <TabsTrigger 
                 value="faculty"
-                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                className="data-[state=active]:bg-violet-600 data-[state=active]:text-white"
               >
                 Faculty
               </TabsTrigger>
               <TabsTrigger 
                 value="student"
-                className="data-[state=active]:bg-pink-600 data-[state=active]:text-white"
+                className="data-[state=active]:bg-rose-600 data-[state=active]:text-white"
               >
                 Student
               </TabsTrigger>
@@ -111,7 +141,7 @@ const Login = () => {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="admin-username" className="flex items-center gap-2">
-                      <User size={16} className="text-indigo-600" />
+                      <User size={16} className="text-emerald-600" />
                       Username
                     </Label>
                     <Input 
@@ -121,12 +151,12 @@ const Login = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
-                      className="border-indigo-200 focus:border-indigo-500"
+                      className="border-emerald-200 focus:border-emerald-500"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="admin-password" className="flex items-center gap-2">
-                      <Lock size={16} className="text-indigo-600" />
+                      <Lock size={16} className="text-emerald-600" />
                       Password
                     </Label>
                     <Input 
@@ -136,12 +166,12 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="border-indigo-200 focus:border-indigo-500"
+                      className="border-emerald-200 focus:border-emerald-500"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
+                    className="w-full bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white" 
                     disabled={loading}
                   >
                     {loading ? 'Signing in...' : 'Sign In'}
@@ -154,7 +184,7 @@ const Login = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleQuickLogin('admin')}
-                    className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                    className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                   >
                     Login as Admin (admin/admin)
                   </Button>
@@ -167,7 +197,7 @@ const Login = () => {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="faculty-username" className="flex items-center gap-2">
-                      <User size={16} className="text-purple-600" />
+                      <User size={16} className="text-violet-600" />
                       Username
                     </Label>
                     <Input 
@@ -177,12 +207,12 @@ const Login = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
-                      className="border-purple-200 focus:border-purple-500"
+                      className="border-violet-200 focus:border-violet-500"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="faculty-password" className="flex items-center gap-2">
-                      <Lock size={16} className="text-purple-600" />
+                      <Lock size={16} className="text-violet-600" />
                       Password
                     </Label>
                     <Input 
@@ -192,12 +222,12 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="border-purple-200 focus:border-purple-500"
+                      className="border-violet-200 focus:border-violet-500"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white" 
                     disabled={loading}
                   >
                     {loading ? 'Signing in...' : 'Sign In'}
@@ -210,7 +240,7 @@ const Login = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleQuickLogin('faculty')}
-                    className="w-full border-purple-300 text-purple-700 hover:bg-purple-50"
+                    className="w-full border-violet-300 text-violet-700 hover:bg-violet-50"
                   >
                     Login as Dr. Turing (alan.turing/password123)
                   </Button>
@@ -223,7 +253,7 @@ const Login = () => {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="student-username" className="flex items-center gap-2">
-                      <User size={16} className="text-pink-600" />
+                      <User size={16} className="text-rose-600" />
                       Username
                     </Label>
                     <Input 
@@ -233,12 +263,12 @@ const Login = () => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
-                      className="border-pink-200 focus:border-pink-500"
+                      className="border-rose-200 focus:border-rose-500"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="student-password" className="flex items-center gap-2">
-                      <Lock size={16} className="text-pink-600" />
+                      <Lock size={16} className="text-rose-600" />
                       Password
                     </Label>
                     <Input 
@@ -248,12 +278,12 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="border-pink-200 focus:border-pink-500"
+                      className="border-rose-200 focus:border-rose-500"
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-pink-600 hover:bg-pink-700 text-white" 
+                    className="w-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white" 
                     disabled={loading}
                   >
                     {loading ? 'Signing in...' : 'Sign In'}
@@ -266,7 +296,7 @@ const Login = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleQuickLogin('student')}
-                    className="w-full border-pink-300 text-pink-700 hover:bg-pink-50"
+                    className="w-full border-rose-300 text-rose-700 hover:bg-rose-50"
                   >
                     Login as John Doe (john.doe/password123)
                   </Button>

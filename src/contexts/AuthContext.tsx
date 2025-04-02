@@ -57,23 +57,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(authenticatedUser);
       localStorage.setItem('facultyUser', JSON.stringify(authenticatedUser));
       
-      // Show welcome toast based on role
+      // Show welcome toast based on role with improved styling
       if (authenticatedUser.role === 'admin') {
         toast({
           title: "Welcome Admin",
           description: "You are now logged in as administrator.",
+          className: "bg-emerald-50 border-emerald-200 text-emerald-800",
         });
       } else if (authenticatedUser.role === 'faculty') {
         const faculty = authenticatedUser.facultyId ? getFacultyById(authenticatedUser.facultyId) : null;
         toast({
           title: `Welcome ${faculty?.name || 'Faculty'}`,
           description: "You are now logged in to the faculty portal.",
+          className: "bg-violet-50 border-violet-200 text-violet-800",
         });
       } else if (authenticatedUser.role === 'student') {
         const student = authenticatedUser.studentId ? getStudentById(authenticatedUser.studentId) : null;
         toast({
           title: `Welcome ${student?.name || 'Student'}`,
           description: "You are now logged in to the student portal.",
+          className: "bg-rose-50 border-rose-200 text-rose-800",
         });
       }
       
@@ -84,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       title: "Login Failed",
       description: "Invalid username or password. Please try again.",
       variant: "destructive",
+      className: "bg-red-50 border-red-300 text-red-900",
     });
     
     return false;
@@ -95,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
+      className: "bg-blue-50 border-blue-200 text-blue-800",
     });
   };
 
@@ -109,7 +114,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   if (isLoading) {
-    return <div>Loading authentication...</div>;
+    return <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin h-10 w-10 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+        <p className="text-gray-600">Loading authentication...</p>
+      </div>
+    </div>;
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

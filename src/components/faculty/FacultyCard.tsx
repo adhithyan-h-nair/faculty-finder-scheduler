@@ -8,6 +8,7 @@ import { getFacultyById, updateFacultyStatus } from '@/lib/data';
 import { Mail, Phone, UserCheck, UserX, Pencil, Trash2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FacultyCardProps {
   faculty: Faculty;
@@ -27,9 +28,20 @@ const FacultyCard = ({
   className 
 }: FacultyCardProps) => {
   const { toast } = useToast();
+  const { role } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const isAdmin = role === 'admin';
 
   const handleStatusChange = async (newStatus: 'available' | 'absent') => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can change faculty status.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // If setting to absent, we need to find an available substitute
@@ -41,6 +53,7 @@ const FacultyCard = ({
             toast({
               title: "Status Updated",
               description: `${faculty.name} is now marked as ${newStatus}.`,
+              className: "bg-blue-50 border-blue-200",
             });
             onUpdate();
           }
@@ -53,6 +66,7 @@ const FacultyCard = ({
           toast({
             title: "Status Updated",
             description: `${faculty.name} is now marked as ${newStatus}.`,
+            className: "bg-green-50 border-green-200",
           });
           onUpdate();
         }
@@ -63,12 +77,23 @@ const FacultyCard = ({
         title: "Error",
         description: "Failed to update faculty status.",
         variant: "destructive",
+        className: "bg-red-50 border-red-200",
       });
       setIsLoading(false);
     }
   };
 
   const handleAssignSubstitute = async () => {
+    if (!isAdmin) {
+      toast({
+        title: "Permission Denied",
+        description: "Only administrators can assign substitutes.",
+        variant: "destructive",
+        className: "bg-red-50 border-red-200",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // In a real app, this would be an API call to find an available substitute
@@ -84,6 +109,7 @@ const FacultyCard = ({
           toast({
             title: "Substitute Assigned",
             description: `${availableFaculty.name} has been assigned to substitute for ${faculty.name}.`,
+            className: "bg-purple-50 border-purple-200",
           });
           onUpdate();
         } else {
@@ -91,6 +117,7 @@ const FacultyCard = ({
             title: "No Substitutes Available",
             description: "Could not find an available faculty member to substitute.",
             variant: "destructive",
+            className: "bg-yellow-50 border-yellow-200 text-yellow-800",
           });
         }
         setIsLoading(false);
@@ -100,6 +127,7 @@ const FacultyCard = ({
         title: "Error",
         description: "Failed to assign substitute.",
         variant: "destructive",
+        className: "bg-red-50 border-red-200",
       });
       setIsLoading(false);
     }
@@ -156,6 +184,14 @@ const FacultyCard = ({
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
               <Phone size={14} className="mr-2 shrink-0" />
               <span>{faculty.phone}</span>
+            </div>
+          )}
+          
+          {isAdmin && (
+            <div className="mt-1 p-2 bg-blue-50 rounded-md">
+              <div className="text-xs text-blue-800 font-medium">Login Details:</div>
+              <div className="text-xs text-blue-600">Username: {faculty.username}</div>
+              <div className="text-xs text-blue-600">Password: {faculty.password}</div>
             </div>
           )}
         </div>
