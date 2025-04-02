@@ -4,15 +4,16 @@ import { Period, Day, Semester, Faculty } from '@/lib/types';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus, Calendar, Trash2, Clock, Filter, UserCheck } from 'lucide-react';
+import { Plus, Calendar, Trash2, Clock, Filter, UserCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getTodayDay, findPotentialSubstitutes, assignSubstitute } from '@/lib/data';
+import { getTodayDay, findPotentialSubstitutes, assignSubstitute, logSubstitutionFailure } from '@/lib/data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TimetableViewProps {
   periods: Period[];
@@ -43,6 +44,8 @@ const TimetableView = ({
   const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const [potentialSubstitutes, setPotentialSubstitutes] = useState<Faculty[]>([]);
   const [selectedSubstitute, setSelectedSubstitute] = useState<string>('');
+  const [substitutionError, setSubstitutionError] = useState<string | null>(null);
+  const [substitutionReason, setSubstitutionReason] = useState<string | null>(null);
   
   const semesters: Semester[] = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const todayDay = getTodayDay();
@@ -109,15 +112,31 @@ const TimetableView = ({
   
   const handleRequestSubstitute = (period: Period) => {
     setPeriodToSubstitute(period);
+    setSubstitutionError(null);
+    setSubstitutionReason(null);
     
-    // Get potential substitutes
+    // Get potential substitutes using our enhanced algorithm
     const result = assignSubstitute(period.id, facultyId);
     
     if (result.success && result.substitutes && result.substitutes.length > 0) {
       setPotentialSubstitutes(result.substitutes);
       setSelectedSubstitute(result.substitutes[0].id);
+      setSubstitutionReason(result.reason || null);
     } else {
       setPotentialSubstitutes([]);
+      setSubstitutionError(result.message || "No suitable substitutes found");
+      
+      // Log the failed substitution attempt
+      if (!result.success) {
+        logSubstitutionFailure(facultyId, period.id, result.message);
+      }
+      
+      // Show a toast for immediate feedback
+      toast({
+        title: "Substitution Not Available",
+        description: result.message || "No suitable substitutes found",
+        variant: "destructive",
+      });
     }
     
     setIsSubstituteDialogOpen(true);
@@ -136,7 +155,8 @@ const TimetableView = ({
     // In a real app, this would call an API to assign the selected substitute
     toast({
       title: "Substitution Assigned",
-      description: `The selected substitute has been assigned to this class.`,
+      description: `The selected substitute has been assigned to this class based on department, semester teaching experience, and time availability.`,
+      className: "bg-green-50 border-green-200",
     });
     
     onUpdateTimetable();
@@ -320,40 +340,58 @@ const TimetableView = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Request Substitute Teacher</AlertDialogTitle>
             <AlertDialogDescription>
-              {potentialSubstitutes.length > 0 ? (
-                <div>
-                  <p className="mb-2">Select a substitute for this class:</p>
-                  {periodToSubstitute && (
-                    <div className="mt-2 p-3 bg-blue-50 rounded-md text-sm">
-                      <div><strong>Course:</strong> {periodToSubstitute.courseCode} - {periodToSubstitute.courseTitle}</div>
-                      <div><strong>Day:</strong> {periodToSubstitute.day}</div>
-                      <div><strong>Time:</strong> {periodToSubstitute.startTime} - {periodToSubstitute.endTime}</div>
-                      <div><strong>Semester:</strong> {periodToSubstitute.semester}</div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-red-500 font-medium">
-                  No eligible substitutes found. Need faculty from the same department who are available during this time slot.
+              {periodToSubstitute && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md text-sm">
+                  <div><strong>Course:</strong> {periodToSubstitute.courseCode} - {periodToSubstitute.courseTitle}</div>
+                  <div><strong>Day:</strong> {periodToSubstitute.day}</div>
+                  <div><strong>Time:</strong> {periodToSubstitute.startTime} - {periodToSubstitute.endTime}</div>
+                  <div><strong>Semester:</strong> {periodToSubstitute.semester}</div>
                 </div>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          {potentialSubstitutes.length > 0 && (
-            <div className="py-4">
-              <RadioGroup value={selectedSubstitute} onValueChange={setSelectedSubstitute} className="space-y-2">
-                {potentialSubstitutes.map(faculty => (
-                  <div key={faculty.id} className="flex items-center space-x-2 border border-gray-200 rounded-md p-3 hover:bg-slate-50">
-                    <RadioGroupItem value={faculty.id} id={faculty.id} />
-                    <Label htmlFor={faculty.id} className="flex-1 cursor-pointer">
-                      <div className="font-medium">{faculty.name}</div>
-                      <div className="text-sm text-muted-foreground">{faculty.department}</div>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
+          {substitutionError ? (
+            <Alert variant="destructive" className="my-4 bg-red-50 border-red-200 text-red-800">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Substitution Not Available</AlertTitle>
+              <AlertDescription>
+                {substitutionError}
+              </AlertDescription>
+            </Alert>
+          ) : potentialSubstitutes.length > 0 ? (
+            <>
+              {substitutionReason && (
+                <Alert className="my-4 bg-green-50 border-green-200 text-green-800">
+                  <AlertTitle>Substitution Criteria</AlertTitle>
+                  <AlertDescription>
+                    {substitutionReason}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="py-4">
+                <RadioGroup value={selectedSubstitute} onValueChange={setSelectedSubstitute} className="space-y-2">
+                  {potentialSubstitutes.map(faculty => (
+                    <div key={faculty.id} className="flex items-center space-x-2 border border-gray-200 rounded-md p-3 hover:bg-slate-50">
+                      <RadioGroupItem value={faculty.id} id={faculty.id} />
+                      <Label htmlFor={faculty.id} className="flex-1 cursor-pointer">
+                        <div className="font-medium">{faculty.name}</div>
+                        <div className="text-sm text-muted-foreground">{faculty.department}</div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            </>
+          ) : (
+            <Alert variant="destructive" className="my-4 bg-red-50 border-red-200 text-red-800">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>No Eligible Substitutes</AlertTitle>
+              <AlertDescription>
+                No eligible substitutes found. Need faculty from the same department who are available during this time slot and teach similar subjects.
+              </AlertDescription>
+            </Alert>
           )}
           
           <AlertDialogFooter>

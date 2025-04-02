@@ -1,4 +1,3 @@
-
 import { Faculty, Period, FacultyStatus, Day, Student, User, UserRole, Semester } from "./types";
 
 // Get current date to determine semester (odd/even)
@@ -588,19 +587,23 @@ export const updateFacultyStatus = (
   return null;
 };
 
-// Find faculty members who can substitute based on enhanced criteria
+// Enhanced algorithm for finding potential substitutes based on multiple criteria
 export const findPotentialSubstitutes = (period: Period, absentFacultyId: string): Faculty[] => {
   const absentFaculty = getFacultyById(absentFacultyId);
   if (!absentFaculty) return [];
   
-  // First, find all faculty in the same department
+  // Step 1: Find all faculty in the same department
   const sameDeptFaculty = facultyData.filter(f => 
     f.id !== absentFacultyId && 
     f.department === absentFaculty.department && 
     f.status === 'available'
   );
   
-  // Check which faculty members are free during this period
+  if (sameDeptFaculty.length === 0) {
+    return []; // No faculty available in the same department
+  }
+  
+  // Step 2: Check which faculty members don't have a class at this time
   const availableFaculty = sameDeptFaculty.filter(faculty => {
     const facultyTimetable = getFacultyTimetable(faculty.id);
     // Check if faculty has no class at this time on this day
@@ -612,29 +615,59 @@ export const findPotentialSubstitutes = (period: Period, absentFacultyId: string
     return !conflictingPeriod;
   });
   
-  // Enhanced criteria: Prioritize faculty who teach the same semester
-  return availableFaculty.sort((a, b) => {
-    const facultyATimetable = getFacultyTimetable(a.id);
-    const facultyBTimetable = getFacultyTimetable(b.id);
+  if (availableFaculty.length === 0) {
+    return []; // No faculty available at this time slot
+  }
+  
+  // Step 3: Score each faculty based on criteria:
+  // - Same semester (highest priority)
+  // - Same or related subject (medium priority)
+  // - Appropriate teaching load (lowest priority)
+  const scoredFaculty = availableFaculty.map(faculty => {
+    const facultyTimetable = getFacultyTimetable(faculty.id);
     
-    // Check if either faculty teaches the same semester as the period
-    const aTeachesSameSemester = facultyATimetable.some(p => p.semester === period.semester);
-    const bTeachesSameSemester = facultyBTimetable.some(p => p.semester === period.semester);
+    // Check if faculty teaches the same semester
+    const teachingSameSemester = facultyTimetable.some(p => p.semester === period.semester);
     
-    if (aTeachesSameSemester && !bTeachesSameSemester) return -1;
-    if (!aTeachesSameSemester && bTeachesSameSemester) return 1;
+    // Check if faculty teaches the same subject or related subject
+    const courseCodePrefix = period.courseCode.substring(0, 2); // e.g., CS, EE, ME
+    const teachingSimilarSubject = facultyTimetable.some(p => 
+      p.courseCode === period.courseCode || // Exact same course
+      p.courseCode.startsWith(courseCodePrefix) // Related course in same department
+    );
     
-    // If both or neither teach the same semester, prioritize by teaching load
-    return facultyATimetable.length - facultyBTimetable.length;
+    // Calculate teaching load (lower is better for substitution)
+    const teachingLoad = facultyTimetable.length;
+    
+    // Calculate score (higher is better)
+    let score = 0;
+    if (teachingSameSemester) score += 10; // Highest priority
+    if (teachingSimilarSubject) score += 5; // Medium priority
+    score += (10 - Math.min(teachingLoad, 10))/2; // Lower teaching load gives higher score (max 5 points)
+    
+    return {
+      faculty,
+      score,
+      teachingSameSemester,
+      teachingSimilarSubject,
+      teachingLoad
+    };
   });
+  
+  // Sort by score (descending)
+  scoredFaculty.sort((a, b) => b.score - a.score);
+  
+  // Return the faculties in order of suitability
+  return scoredFaculty.map(item => item.faculty);
 };
 
-// Attempt to assign substitute for a period with multiple options
+// Enhancing the assignSubstitute function to provide better error messages
 export const assignSubstitute = (periodId: string, absentFacultyId: string): { 
   success: boolean; 
   message: string; 
   newFacultyId?: string;
   substitutes?: Faculty[];
+  reason?: string;
 } => {
   // Find the period
   let foundPeriod: Period | undefined;
@@ -651,20 +684,44 @@ export const assignSubstitute = (periodId: string, absentFacultyId: string): {
   });
   
   if (!foundPeriod) {
-    return { success: false, message: "Period not found" };
-  }
-  
-  // Find potential substitutes
-  const potentialSubstitutes = findPotentialSubstitutes(foundPeriod, absentFacultyId);
-  
-  if (potentialSubstitutes.length === 0) {
     return { 
       success: false, 
-      message: "No eligible substitutes found. Need faculty from same department who are available during this time slot." 
+      message: "Period not found", 
+      reason: "period_not_found" 
     };
   }
   
-  // Return all potential substitutes but select the first one as default
+  // Find potential substitutes with our enhanced algorithm
+  const potentialSubstitutes = findPotentialSubstitutes(foundPeriod, absentFacultyId);
+  
+  if (potentialSubstitutes.length === 0) {
+    // Provide specific reasons for failure
+    const absentFaculty = getFacultyById(absentFacultyId);
+    
+    // Check if there are any faculty in the same department
+    const sameDeptFaculty = facultyData.filter(f => 
+      f.id !== absentFacultyId && 
+      f.department === absentFaculty?.department && 
+      f.status === 'available'
+    );
+    
+    if (sameDeptFaculty.length === 0) {
+      return { 
+        success: false, 
+        message: `No available faculty in the ${absentFaculty?.department} department. Please consider faculty from related departments.`,
+        reason: "no_same_department" 
+      };
+    }
+    
+    // Check if everyone is teaching at this time
+    return { 
+      success: false, 
+      message: `All eligible faculty members are teaching at this time (${foundPeriod.startTime}-${foundPeriod.endTime} on ${foundPeriod.day}). Please reschedule the class.`,
+      reason: "time_conflict" 
+    };
+  }
+  
+  // We have found at least one suitable substitute
   const substitute = potentialSubstitutes[0];
   
   // Update faculty status for the default substitute
@@ -675,12 +732,136 @@ export const assignSubstitute = (periodId: string, absentFacultyId: string): {
   delete allTimetables[absentFacultyId];
   delete allTimetables[substitute.id];
   
+  // Log the substitution
+  logSubstitution(absentFacultyId, substitute.id, foundPeriod.id, `${foundPeriod.courseCode} - ${foundPeriod.courseTitle}`);
+  
+  // Create detailed success message with substitution criteria
+  let substitutionDetails = "";
+  
+  // Check if substitute teaches the same semester
+  const substituteTimetable = getFacultyTimetable(substitute.id);
+  const teachingSameSemester = substituteTimetable.some(p => p.semester === foundPeriod.semester);
+  if (teachingSameSemester) {
+    substitutionDetails += "✓ Teaching same semester. ";
+  }
+  
+  // Check if substitute teaches the same/similar subject
+  const courseCodePrefix = foundPeriod.courseCode.substring(0, 2);
+  const teachingSimilarSubject = substituteTimetable.some(p => 
+    p.courseCode === foundPeriod.courseCode || 
+    p.courseCode.startsWith(courseCodePrefix)
+  );
+  if (teachingSimilarSubject) {
+    substitutionDetails += "✓ Teaching similar subjects. ";
+  }
+  
+  substitutionDetails += `✓ Available during required time slot.`;
+  
   return { 
     success: true, 
-    message: `${potentialSubstitutes.length} potential substitute(s) found. ${substitute.name} has been assigned as default.`,
+    message: `${potentialSubstitutes.length} potential substitute(s) found. ${substitute.name} has been assigned as the most suitable substitute.`,
     newFacultyId: substitute.id,
-    substitutes: potentialSubstitutes
+    substitutes: potentialSubstitutes,
+    reason: substitutionDetails
   };
+};
+
+// Substitution log to track all substitution events
+const substitutionLog: {
+  id: string;
+  date: Date;
+  absentFacultyId: string;
+  substituteId: string;
+  periodId: string;
+  course: string;
+  day: Day;
+  timeSlot: string;
+  success: boolean;
+  reason?: string;
+}[] = [];
+
+// Record a substitution in the log
+export const logSubstitution = (absentFacultyId: string, substituteId: string, periodId: string, course: string) => {
+  // Find the period
+  const allTimetables = getAllTimetables();
+  let period: Period | undefined;
+  
+  // Search through all timetables
+  allTimetables.forEach(timetable => {
+    const foundPeriod = timetable.periods.find(p => p.id === periodId);
+    if (foundPeriod) {
+      period = foundPeriod;
+    }
+  });
+  
+  if (!period) return;
+  
+  substitutionLog.unshift({
+    id: `sub-${Date.now()}`,
+    date: new Date(),
+    absentFacultyId,
+    substituteId,
+    periodId,
+    course,
+    day: period.day,
+    timeSlot: `${period.startTime}-${period.endTime}`,
+    success: true
+  });
+  
+  // Limit log size
+  if (substitutionLog.length > 100) {
+    substitutionLog.pop();
+  }
+};
+
+// Log substitution failure
+export const logSubstitutionFailure = (absentFacultyId: string, periodId: string, reason: string) => {
+  // Find the period
+  const allTimetables = getAllTimetables();
+  let period: Period | undefined;
+  
+  // Search through all timetables
+  allTimetables.forEach(timetable => {
+    const foundPeriod = timetable.periods.find(p => p.id === periodId);
+    if (foundPeriod) {
+      period = foundPeriod;
+    }
+  });
+  
+  if (!period) return;
+  
+  substitutionLog.unshift({
+    id: `sub-fail-${Date.now()}`,
+    date: new Date(),
+    absentFacultyId,
+    substituteId: '', // No substitute found
+    periodId,
+    course: `${period.courseCode} - ${period.courseTitle}`,
+    day: period.day,
+    timeSlot: `${period.startTime}-${period.endTime}`,
+    success: false,
+    reason
+  });
+  
+  // Limit log size
+  if (substitutionLog.length > 100) {
+    substitutionLog.pop();
+  }
+};
+
+// Get the substitution log
+export const getSubstitutionLog = () => {
+  return substitutionLog.map(entry => {
+    const absentFaculty = getFacultyById(entry.absentFacultyId);
+    const substitute = entry.substituteId ? getFacultyById(entry.substituteId) : null;
+    
+    return {
+      ...entry,
+      absentFacultyName: absentFaculty?.name || 'Unknown',
+      substituteName: substitute?.name || 'Not assigned',
+      departmentName: absentFaculty?.department || 'Unknown'
+    };
+  }).sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by most recent
 };
 
 // Add a new faculty member
@@ -793,38 +974,4 @@ export const updateStudentSemesters = () => {
   });
   
   return studentData;
-};
-
-// Function to log substitution events
-const substitutionLog: {
-  date: Date;
-  absentFacultyId: string;
-  substituteId: string;
-  periodId: string;
-  course: string;
-}[] = [];
-
-// Record a substitution in the log
-export const logSubstitution = (absentFacultyId: string, substituteId: string, periodId: string, course: string) => {
-  substitutionLog.push({
-    date: new Date(),
-    absentFacultyId,
-    substituteId,
-    periodId,
-    course
-  });
-};
-
-// Get the substitution log
-export const getSubstitutionLog = () => {
-  return substitutionLog.map(entry => {
-    const absentFaculty = getFacultyById(entry.absentFacultyId);
-    const substitute = getFacultyById(entry.substituteId);
-    
-    return {
-      ...entry,
-      absentFacultyName: absentFaculty?.name || 'Unknown',
-      substituteName: substitute?.name || 'Unknown'
-    };
-  }).sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by most recent
 };

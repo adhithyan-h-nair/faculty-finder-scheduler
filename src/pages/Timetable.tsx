@@ -6,10 +6,11 @@ import TimetableView from '@/components/timetable/TimetableView';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
-import { facultyData, getFacultyTimetable, getTodayDay } from '@/lib/data';
+import { facultyData, getFacultyTimetable, getTodayDay, getFacultyById, getSubstitutionLog } from '@/lib/data';
 import { Faculty, Period, Semester } from '@/lib/types';
-import { Calendar, UserCog, BookOpen, Clock } from 'lucide-react';
+import { Calendar, UserCog, BookOpen, Clock, FileCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const TimetablePage = () => {
   const { role, facultyId } = useAuth();
@@ -17,6 +18,7 @@ const TimetablePage = () => {
   const [timetable, setTimetable] = useState<Period[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // Set default faculty based on logged in user or first in list
   useEffect(() => {
@@ -39,6 +41,7 @@ const TimetablePage = () => {
         const periods = getFacultyTimetable(selectedFaculty.id);
         setTimetable(periods);
         setLoading(false);
+        setLastUpdated(new Date());
       }, 300);
     }
   }, [selectedFaculty]);
@@ -49,9 +52,11 @@ const TimetablePage = () => {
       if (selectedFaculty) {
         const periods = getFacultyTimetable(selectedFaculty.id);
         setTimetable(periods);
+        setLastUpdated(new Date());
         toast({
           title: "Timetable Updated",
           description: "The faculty timetable has been updated successfully.",
+          className: "bg-green-50 border-green-200",
         });
       }
       setLoading(false);
@@ -67,9 +72,11 @@ const TimetablePage = () => {
       if (selectedFaculty) {
         const periods = getFacultyTimetable(selectedFaculty.id);
         setTimetable(periods);
+        setLastUpdated(new Date());
         toast({
           title: "Period Deleted",
           description: "The class period has been deleted successfully.",
+          className: "bg-green-50 border-green-200",
         });
       }
       setLoading(false);
@@ -81,6 +88,35 @@ const TimetablePage = () => {
   const semesterCount = new Set(timetable.map(p => p.semester)).size;
   const todayDay = getTodayDay();
   const todayCount = timetable.filter(p => p.day === todayDay).length;
+  const currentDateTime = new Date();
+  const formattedDate = format(currentDateTime, 'EEEE, MMMM d, yyyy');
+  const formattedTime = format(currentDateTime, 'h:mm a');
+  
+  // Get substitution info if the faculty is being substituted or is substituting
+  const getSubstitutionInfo = () => {
+    if (!selectedFaculty) return null;
+    
+    if (selectedFaculty.status === 'substituted' && selectedFaculty.substitutedBy) {
+      const substitute = getFacultyById(selectedFaculty.substitutedBy);
+      return substitute 
+        ? { type: 'substituted', name: substitute.name, id: substitute.id }
+        : null;
+    }
+    
+    if (selectedFaculty.status === 'substituting' && selectedFaculty.substituting) {
+      const original = getFacultyById(selectedFaculty.substituting);
+      return original 
+        ? { type: 'substituting', name: original.name, id: original.id }
+        : null;
+    }
+    
+    return null;
+  };
+  
+  const substitutionInfo = getSubstitutionInfo();
+  
+  // Recent substitutions (for admin view)
+  const recentSubstitutions = role === 'admin' ? getSubstitutionLog().slice(0, 3) : [];
   
   // Group by semester for analysis
   const semesterCounts = timetable.reduce<Record<Semester, number>>((acc, period) => {
@@ -96,6 +132,32 @@ const TimetablePage = () => {
           View and manage faculty schedules and periods
         </p>
       </div>
+      
+      {/* Current Date and Time */}
+      <Card className="mb-6 shadow-sm border-gray-200 bg-white">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Calendar size={20} className="text-blue-600" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Current Date</div>
+                <div className="font-medium">{formattedDate}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Clock size={20} className="text-purple-600" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Current Time</div>
+                <div className="font-medium">{formattedTime}</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Faculty Selector */}
       <Card className="mb-6 shadow-sm border-gray-200 bg-white">
@@ -132,7 +194,18 @@ const TimetablePage = () => {
                   </div>
                   <div>
                     <div className="font-medium">{selectedFaculty.department}</div>
-                    <StatusBadge status={selectedFaculty.status} />
+                    <div className="flex items-center gap-1">
+                      <StatusBadge status={selectedFaculty.status} />
+                      
+                      {substitutionInfo && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {substitutionInfo.type === 'substituted' 
+                            ? `Substituted by ${substitutionInfo.name}`
+                            : `Substituting for ${substitutionInfo.name}`
+                          }
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -175,6 +248,52 @@ const TimetablePage = () => {
         </CardContent>
       </Card>
       
+      {/* Recent Substitutions (Admin Only) */}
+      {role === 'admin' && recentSubstitutions.length > 0 && (
+        <Card className="mb-6 shadow-sm border-gray-200 bg-white">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <FileCheck size={18} className="text-blue-600" />
+              <h3 className="text-lg font-medium">Recent Substitutions</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {recentSubstitutions.map(sub => (
+                <div 
+                  key={sub.id} 
+                  className={`p-3 rounded-lg border ${sub.success 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">
+                        {sub.success 
+                          ? `${sub.substituteName} ⟶ ${sub.absentFacultyName}` 
+                          : `Failed: ${sub.absentFacultyName}`}
+                      </div>
+                      <div className="text-sm text-muted-foreground">{sub.course}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {sub.day}, {sub.timeSlot}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {format(sub.date, 'MMM d, h:mm a')}
+                    </div>
+                  </div>
+                  
+                  {!sub.success && sub.reason && (
+                    <div className="mt-2 text-sm text-red-600">
+                      Reason: {sub.reason}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Semester Overview */}
       {!loading && Object.keys(semesterCounts).length > 0 && (
         <Card className="mb-6 shadow-sm border-gray-200 bg-white">
@@ -192,6 +311,11 @@ const TimetablePage = () => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Last Updated */}
+      <div className="mb-4 text-sm text-muted-foreground">
+        Last updated: {format(lastUpdated, 'MMMM d, yyyy h:mm a')}
+      </div>
       
       {/* Timetable View */}
       {loading ? (
