@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole } from '@/lib/types';
 import { BookOpen, Lock, User } from 'lucide-react';
+import { format } from 'date-fns'; // Added import for format function
 
 const Login = () => {
   const navigate = useNavigate();
