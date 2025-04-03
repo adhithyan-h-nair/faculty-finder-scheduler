@@ -65,3 +65,19 @@ export interface User {
   facultyId?: string;
   studentId?: string;
 }
+
+export interface SubstitutionLogEntry {
+  id: string;
+  absentFacultyId: string;
+  absentFacultyName: string;
+  substituteId?: string;
+  substituteName?: string;
+  periodId: string;
+  course: string;
+  day: Day;
+  timeSlot: string;
+  date: Date;
+  success: boolean;
+  reason?: string;
+  teachingOwnSubject?: boolean;
+}

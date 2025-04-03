@@ -1,4 +1,4 @@
-import { Day, Faculty, FacultyStatus, Period, Semester, StatusCount, Student, User, UserRole } from './types';
+import { Day, Faculty, FacultyStatus, Period, Semester, StatusCount, Student, User, UserRole, SubstitutionLogEntry } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock data for faculty
@@ -374,20 +374,7 @@ const timetableData: Period[] = [
 ];
 
 // Substitution log
-const substitutionLog: {
-  id: string;
-  absentFacultyId: string;
-  absentFacultyName: string;
-  substituteId?: string;
-  substituteName?: string;
-  periodId: string;
-  course: string;
-  day: Day;
-  timeSlot: string;
-  date: Date;
-  success: boolean;
-  reason?: string;
-}[] = [
+const substitutionLog: SubstitutionLogEntry[] = [
   {
     id: 'sl1',
     absentFacultyId: 'f1',
