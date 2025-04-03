@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { User, UserRole } from '@/lib/types';
-import { authenticateUser, getFacultyById, getStudentById } from '@/lib/data';
+import { authenticateUser, getFacultyById, getStudentById, getAllUsers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -12,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  users: User[];
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   login: async () => false,
   logout: () => {},
+  users: [],
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -33,7 +35,13 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
   const { toast } = useToast();
+
+  // Get all users for admin
+  useEffect(() => {
+    setUsers(getAllUsers());
+  }, []);
 
   // Check for existing session on load
   useEffect(() => {
@@ -123,6 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     login,
     logout,
+    users
   };
 
   if (isLoading) {

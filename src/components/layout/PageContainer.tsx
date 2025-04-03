@@ -19,7 +19,7 @@ const PageContainer = ({
       <Header />
       <main 
         className={cn(
-          'pt-16 sm:pt-20 md:pt-24 pb-12 px-3 sm:px-6 mx-auto',
+          'pt-20 pb-12 px-4 sm:px-6 mx-auto',
           fullWidth ? 'w-full' : 'max-w-7xl',
           className
         )}

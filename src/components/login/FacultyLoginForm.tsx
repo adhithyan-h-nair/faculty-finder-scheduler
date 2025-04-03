@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CardContent } from '@/components/ui/card';
 import { Lock, User } from 'lucide-react';
+import { getRoleColors } from './loginStyles';
 
 interface LoginFormProps {
   username: string;
@@ -24,12 +25,14 @@ const FacultyLoginForm = ({
   onSubmit,
   onQuickLogin
 }: LoginFormProps) => {
+  const colors = getRoleColors('faculty');
+  
   return (
     <CardContent className="space-y-4 pt-6">
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="faculty-username" className="flex items-center gap-2">
-            <User size={16} className="text-violet-600" />
+            <User size={16} className={colors.accent} />
             Username
           </Label>
           <Input 
@@ -39,12 +42,12 @@ const FacultyLoginForm = ({
             value={username}
             onChange={(e) => onUsernameChange(e.target.value)}
             required
-            className="border-violet-200 focus:border-violet-500"
+            className={colors.input}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="faculty-password" className="flex items-center gap-2">
-            <Lock size={16} className="text-violet-600" />
+            <Lock size={16} className={colors.accent} />
             Password
           </Label>
           <Input 
@@ -54,12 +57,12 @@ const FacultyLoginForm = ({
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             required
-            className="border-violet-200 focus:border-violet-500"
+            className={colors.input}
           />
         </div>
         <Button 
           type="submit" 
-          className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white" 
+          className={`w-full bg-gradient-to-r ${colors.primary} hover:from-violet-700 hover:to-purple-700 text-white`}
           disabled={loading}
         >
           {loading ? 'Signing in...' : 'Sign In'}
@@ -68,11 +71,12 @@ const FacultyLoginForm = ({
       
       <div className="text-center pt-2">
         <div className="text-sm text-muted-foreground mb-2">Quick login for demo</div>
+        <div className="text-xs text-gray-500 mb-2">Faculty credentials: jsmith / password123</div>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={onQuickLogin}
-          className="w-full border-violet-300 text-violet-700 hover:bg-violet-50"
+          className={`w-full ${colors.tertiary}`}
         >
           Login as Faculty
         </Button>
