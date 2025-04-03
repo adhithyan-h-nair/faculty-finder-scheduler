@@ -431,6 +431,86 @@ const substitutionLog: {
 // Keep track of absent faculty with dates
 let absentFaculty: Record<string, Date> = {};
 
+// Authentication function for login
+export const authenticateUser = (username: string, password: string): User | null => {
+  const user = userData.find(
+    (user) => user.username === username && user.password === password
+  );
+  return user || null;
+};
+
+// Function to add a new faculty member
+export const addFaculty = (faculty: Omit<Faculty, 'id'>): Faculty => {
+  const newFaculty: Faculty = {
+    ...faculty,
+    id: `f${facultyData.length + 1}`
+  };
+  facultyData.push(newFaculty);
+  return newFaculty;
+};
+
+// Function to remove a faculty member
+export const removeFaculty = (id: string): boolean => {
+  const index = facultyData.findIndex(f => f.id === id);
+  if (index === -1) return false;
+  facultyData.splice(index, 1);
+  return true;
+};
+
+// Function to update faculty status
+export const updateFacultyStatus = (
+  facultyId: string, 
+  status: FacultyStatus, 
+  relatedFacultyId?: string
+): boolean => {
+  const faculty = getFacultyById(facultyId);
+  if (!faculty) return false;
+  
+  faculty.status = status;
+  
+  if (status === 'substituting' && relatedFacultyId) {
+    faculty.substituting = relatedFacultyId;
+  } else if (status === 'substituted' && relatedFacultyId) {
+    faculty.substitutedBy = relatedFacultyId;
+  } else {
+    // Clear any substitution relationships
+    faculty.substituting = undefined;
+    faculty.substitutedBy = undefined;
+  }
+  
+  return true;
+};
+
+// Functions for student management
+export const addStudent = (student: Omit<Student, 'id'>): Student => {
+  const newStudent: Student = {
+    ...student,
+    id: `s${studentData.length + 1}`
+  };
+  studentData.push(newStudent);
+  return newStudent;
+};
+
+export const removeStudent = (id: string): boolean => {
+  const index = studentData.findIndex(s => s.id === id);
+  if (index === -1) return false;
+  studentData.splice(index, 1);
+  return true;
+};
+
+export const updateStudent = (id: string, updatedData: Partial<Student>): Student | null => {
+  const student = studentData.find(s => s.id === id);
+  if (!student) return null;
+  
+  Object.assign(student, updatedData);
+  return student;
+};
+
+// Get timetable by semester and department
+export const getTimetableBySemesterAndDepartment = (semester: Semester, department: string): Period[] => {
+  return timetableData.filter(p => p.semester === semester && p.department === department);
+};
+
 // Function to mark faculty as absent or available
 export const markFacultyAbsent = (facultyId: string, isAbsent: boolean) => {
   if (isAbsent) {
