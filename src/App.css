@@ -1,8 +1,9 @@
+
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .logo {
@@ -18,6 +19,31 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+/* Fix for specific mobile issues */
+@media (max-width: 640px) {
+  .card, .glass-card {
+    padding: 1rem !important;
+  }
+  
+  /* Ensure elements don't overflow their containers */
+  * {
+    max-width: 100%;
+  }
+  
+  /* Improve tap target sizes on mobile */
+  button, .button, a {
+    min-height: 44px;
+    line-height: 1.2;
+  }
+}
+
+/* Ensure forms are responsive */
+form {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Animation for rotating elements */
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

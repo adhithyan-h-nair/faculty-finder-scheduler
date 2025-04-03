@@ -135,39 +135,45 @@ const Header = () => {
           size="icon" 
           className="md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </Button>
         
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white shadow-md py-2 md:hidden animate-fade-in border-t border-gray-100">
-            {navItems.map((item) => (
-              <Link 
-                key={item.path} 
-                to={item.path}
-                className={cn(
-                  "flex items-center py-3 px-6",
-                  isPathActive(item.path) 
-                    ? "bg-primary/5 text-primary border-l-2 border-primary" 
-                    : "text-foreground hover:bg-secondary"
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.icon}
-                <span className="ml-2">{item.label}</span>
-              </Link>
-            ))}
-            
-            {isAuthenticated && (
-              <button 
-                className="w-full flex items-center py-3 px-6 text-red-600 hover:bg-red-50"
-                onClick={handleLogout}
-              >
-                <LogOut size={18} />
-                <span className="ml-2">Logout</span>
-              </button>
-            )}
+          <div className="fixed top-[57px] left-0 right-0 bottom-0 bg-white z-40 md:hidden animate-fade-in overflow-y-auto">
+            <div className="py-2 max-h-[calc(100vh-57px)] overflow-y-auto">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.path} 
+                  to={item.path}
+                  className={cn(
+                    "flex items-center py-4 px-6 mb-2",
+                    isPathActive(item.path) 
+                      ? "bg-primary/5 text-primary border-l-2 border-primary" 
+                      : "text-foreground hover:bg-secondary"
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.icon}
+                  <span className="ml-3 text-base">{item.label}</span>
+                </Link>
+              ))}
+              
+              {isAuthenticated && (
+                <button 
+                  className="w-full flex items-center py-4 px-6 text-red-600 hover:bg-red-50 mt-auto"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  <LogOut size={18} />
+                  <span className="ml-3 text-base">Logout</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

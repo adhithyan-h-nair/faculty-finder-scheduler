@@ -51,9 +51,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    const authenticatedUser = authenticateUser(username, password);
-    
-    if (authenticatedUser) {
+    try {
+      console.log(`Attempting to login with: ${username} / ${password}`);
+      
+      const authenticatedUser = authenticateUser(username, password);
+      
+      if (!authenticatedUser) {
+        console.log('Authentication failed - no user found');
+        toast({
+          title: "Login Failed",
+          description: "Invalid username or password. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      console.log('User authenticated:', authenticatedUser);
       setUser(authenticatedUser);
       localStorage.setItem('facultyUser', JSON.stringify(authenticatedUser));
       
@@ -81,16 +94,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      return false;
     }
-    
-    toast({
-      title: "Login Failed",
-      description: "Invalid username or password. Please try again.",
-      variant: "destructive",
-      className: "bg-red-50 border-red-300 text-red-900",
-    });
-    
-    return false;
   };
 
   const logout = () => {

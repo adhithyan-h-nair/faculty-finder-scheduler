@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole } from '@/lib/types';
 import { BookOpen, Lock, User } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, role } = useAuth();
+  const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,6 +26,8 @@ const Login = () => {
     if (isAuthenticated) {
       if (role === 'student') {
         navigate('/student-timetable');
+      } else if (role === 'faculty') {
+        navigate('/timetable');
       } else {
         navigate('/dashboard');
       }
@@ -32,30 +36,54 @@ const Login = () => {
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) return;
+    if (!username || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter both username and password",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setLoading(true);
     const success = await login(username, password);
     setLoading(false);
     
+    if (!success) {
+      console.log("Login failed");
+    }
     // No need to navigate here, the useEffect will handle it
   };
   
-  // Quick login buttons for demo purposes (no credentials exposed)
+  // Quick login buttons for demo purposes
   const handleQuickLogin = async (role: UserRole) => {
     setLoading(true);
     
-    let loginSuccess = false;
+    let credentials = { username: '', password: '' };
+    
     if (role === 'admin') {
-      loginSuccess = await login('admin', 'admin123');
+      credentials = { username: 'admin', password: 'admin123' };
     } else if (role === 'faculty') {
-      loginSuccess = await login('faculty', 'faculty123');
+      credentials = { username: 'faculty', password: 'faculty123' };
     } else if (role === 'student') {
-      loginSuccess = await login('student', 'student123');
+      credentials = { username: 'student', password: 'student123' };
     }
+    
+    setUsername(credentials.username);
+    setPassword(credentials.password);
+    
+    const loginSuccess = await login(credentials.username, credentials.password);
     
     setLoading(false);
     
+    if (!loginSuccess) {
+      console.log(`Quick login as ${role} failed`);
+      toast({
+        title: "Login Failed",
+        description: `Quick login as ${role} failed. Please try manual login.`,
+        variant: "destructive"
+      });
+    }
     // No need to navigate here, the useEffect will handle it
   };
 
