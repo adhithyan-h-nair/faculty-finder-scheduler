@@ -5,17 +5,18 @@ import { Period, Day, Semester, Faculty } from '@/lib/types';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus, Calendar, Trash2, Clock, Filter, UserCheck, AlertTriangle, UserX } from 'lucide-react';
+import { Plus, Calendar, Trash2, Clock, Filter, UserCheck, AlertTriangle, UserX, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getTodayDay, findPotentialSubstitutes, assignSubstitute, logSubstitutionFailure, markFacultyAbsent, isFacultyAbsent } from '@/lib/data';
+import { getTodayDay, findPotentialSubstitutes, assignSubstitute, recordSubstitution, logSubstitutionFailure, markFacultyAbsent, isFacultyAbsent } from '@/lib/data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 interface TimetableViewProps {
   periods: Period[];
@@ -45,12 +46,15 @@ const TimetableView = ({
   const [isSubstituteDialogOpen, setIsSubstituteDialogOpen] = useState(false);
   const [periodToSubstitute, setPeriodToSubstitute] = useState<Period | null>(null);
   const [semesterFilter, setSemesterFilter] = useState<string>('all');
-  const [potentialSubstitutes, setPotentialSubstitutes] = useState<Faculty[]>([]);
+  const [potentialSubstitutes, setPotentialSubstitutes] = useState<(Faculty & { canTeachOwnSubject?: boolean; ownSubject?: string })[]>([]);
   const [selectedSubstitute, setSelectedSubstitute] = useState<string>('');
   const [substitutionError, setSubstitutionError] = useState<string | null>(null);
   const [substitutionReason, setSubstitutionReason] = useState<string | null>(null);
   const [isAbsentDialogOpen, setIsAbsentDialogOpen] = useState(false);
   const [isAbsent, setIsAbsent] = useState(false);
+  const [teachOwnSubject, setTeachOwnSubject] = useState(false);
+  const [entireDepartmentAbsent, setEntireDepartmentAbsent] = useState(false);
+  const [noSubstitutesAvailable, setNoSubstitutesAvailable] = useState(false);
   
   const semesters: Semester[] = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const todayDay = getTodayDay();
@@ -136,6 +140,9 @@ const TimetableView = ({
     setPeriodToSubstitute(period);
     setSubstitutionError(null);
     setSubstitutionReason(null);
+    setTeachOwnSubject(false);
+    setEntireDepartmentAbsent(false);
+    setNoSubstitutesAvailable(false);
     
     // Get potential substitutes using our enhanced algorithm
     const result = assignSubstitute(period.id, facultyId);
@@ -148,9 +155,18 @@ const TimetableView = ({
       setPotentialSubstitutes([]);
       setSubstitutionError(result.message || "No suitable substitutes found");
       
+      // Check for specific error conditions
+      if (result.entireDepartmentAbsent) {
+        setEntireDepartmentAbsent(true);
+      }
+      
+      if (result.noSubstitutesAvailable) {
+        setNoSubstitutesAvailable(true);
+      }
+      
       // Log the failed substitution attempt
       if (!result.success) {
-        logSubstitutionFailure(facultyId, period.id, result.message);
+        logSubstitutionFailure(facultyId, period.id, result.message || "Unknown error");
       }
       
       // Show a toast for immediate feedback
@@ -174,12 +190,43 @@ const TimetableView = ({
       return;
     }
     
-    // In a real app, this would call an API to assign the selected substitute
-    toast({
-      title: "Substitution Assigned",
-      description: `The selected substitute has been assigned to this class based on department, semester teaching experience, and time availability.`,
-      className: "bg-green-50 border-green-200",
-    });
+    // Find the selected substitute object
+    const selectedSubstituteObj = potentialSubstitutes.find(sub => sub.id === selectedSubstitute);
+    
+    if (!selectedSubstituteObj) {
+      toast({
+        title: "Error",
+        description: "Selected substitute not found.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Record the substitution
+    const useOwnSubject = teachOwnSubject && selectedSubstituteObj.canTeachOwnSubject;
+    const result = recordSubstitution(
+      periodToSubstitute.id, 
+      facultyId, 
+      selectedSubstitute, 
+      useOwnSubject,
+      selectedSubstituteObj.ownSubject
+    );
+    
+    if (result) {
+      toast({
+        title: "Substitution Assigned",
+        description: teachOwnSubject && selectedSubstituteObj.canTeachOwnSubject
+          ? `${selectedSubstituteObj.name} will teach their own subject (${selectedSubstituteObj.ownSubject}) instead of ${periodToSubstitute.courseTitle}.`
+          : `${selectedSubstituteObj.name} has been assigned to substitute for this class.`,
+        className: "bg-green-50 border-green-200",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to record substitution.",
+        variant: "destructive"
+      });
+    }
     
     onUpdateTimetable();
     setIsSubstituteDialogOpen(false);
@@ -215,6 +262,11 @@ const TimetableView = ({
         return { short: dayAsString.substring(0, 3), full: dayAsString };
     }
   };
+  
+  // Check if the selected substitute can teach their own subject
+  const selectedSubstituteCanTeachOwn = potentialSubstitutes.find(
+    sub => sub.id === selectedSubstitute && sub.canTeachOwnSubject
+  );
   
   return (
     <div className={cn("w-full bg-white p-4 rounded-lg shadow-sm", className)}>
@@ -437,13 +489,33 @@ const TimetableView = ({
           </AlertDialogHeader>
           
           {substitutionError ? (
-            <Alert variant="destructive" className="my-4 bg-rose-50 border-rose-200 text-rose-800">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Substitution Not Available</AlertTitle>
-              <AlertDescription>
-                {substitutionError}
-              </AlertDescription>
-            </Alert>
+            <>
+              {entireDepartmentAbsent ? (
+                <Alert variant="destructive" className="my-4 bg-amber-50 border-amber-200 text-amber-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Department-Wide Absence</AlertTitle>
+                  <AlertDescription>
+                    All faculty in your department are either absent or unavailable at this time. Consider checking with faculty from other departments or rescheduling the class.
+                  </AlertDescription>
+                </Alert>
+              ) : noSubstitutesAvailable ? (
+                <Alert variant="destructive" className="my-4 bg-amber-50 border-amber-200 text-amber-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>No Available Substitutes</AlertTitle>
+                  <AlertDescription>
+                    No faculty are available to substitute for this class period. All potential substitutes have conflicts with their own schedules.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert variant="destructive" className="my-4 bg-rose-50 border-rose-200 text-rose-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Substitution Not Available</AlertTitle>
+                  <AlertDescription>
+                    {substitutionError}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
           ) : potentialSubstitutes.length > 0 ? (
             <>
               {substitutionReason && (
@@ -463,10 +535,36 @@ const TimetableView = ({
                       <Label htmlFor={faculty.id} className="flex-1 cursor-pointer">
                         <div className="font-medium">{faculty.name}</div>
                         <div className="text-sm text-muted-foreground">{faculty.department}</div>
+                        {faculty.canTeachOwnSubject && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            Can teach: {faculty.ownSubject}
+                          </div>
+                        )}
                       </Label>
                     </div>
                   ))}
                 </RadioGroup>
+                
+                {selectedSubstituteCanTeachOwn && (
+                  <div className="mt-4 p-3 border border-blue-200 rounded-md bg-blue-50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <BookOpen size={16} className="text-blue-600" />
+                        <Label htmlFor="teach-own-subject" className="text-sm font-medium text-blue-800">
+                          Allow substitute to teach their own subject
+                        </Label>
+                      </div>
+                      <Switch
+                        id="teach-own-subject"
+                        checked={teachOwnSubject}
+                        onCheckedChange={setTeachOwnSubject}
+                      />
+                    </div>
+                    <p className="text-xs text-blue-700 mt-1 ml-6">
+                      Instead of teaching {periodToSubstitute?.courseTitle}, the substitute can teach their subject: {selectedSubstituteCanTeachOwn.ownSubject}
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           ) : (
