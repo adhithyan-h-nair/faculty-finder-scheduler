@@ -1,19 +1,21 @@
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Period, Day, Semester, Faculty } from '@/lib/types';
 import PeriodCard from './PeriodCard';
 import { cn } from '@/lib/utils';
 import TimetableEditDialog from './TimetableEditDialog';
-import { Plus, Calendar, Trash2, Clock, Filter, UserCheck, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, Trash2, Clock, Filter, UserCheck, AlertTriangle, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getTodayDay, findPotentialSubstitutes, assignSubstitute, logSubstitutionFailure } from '@/lib/data';
+import { getTodayDay, findPotentialSubstitutes, assignSubstitute, logSubstitutionFailure, markFacultyAbsent, isFacultyAbsent } from '@/lib/data';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface TimetableViewProps {
   periods: Period[];
@@ -33,6 +35,7 @@ const TimetableView = ({
   showSubstituteControls = true
 }: TimetableViewProps) => {
   const { toast } = useToast();
+  const { role } = useAuth();
   const [selectedDay, setSelectedDay] = useState<Day>(getTodayDay());
   const days: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const [editPeriod, setEditPeriod] = useState<Period | null>(null);
@@ -46,9 +49,18 @@ const TimetableView = ({
   const [selectedSubstitute, setSelectedSubstitute] = useState<string>('');
   const [substitutionError, setSubstitutionError] = useState<string | null>(null);
   const [substitutionReason, setSubstitutionReason] = useState<string | null>(null);
+  const [isAbsentDialogOpen, setIsAbsentDialogOpen] = useState(false);
+  const [isAbsent, setIsAbsent] = useState(false);
   
   const semesters: Semester[] = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
   const todayDay = getTodayDay();
+  
+  // Check if the faculty is marked as absent
+  useEffect(() => {
+    if (facultyId) {
+      setIsAbsent(isFacultyAbsent(facultyId));
+    }
+  }, [facultyId]);
   
   const filteredPeriods = semesterFilter === 'all' 
     ? periods 
@@ -111,6 +123,16 @@ const TimetableView = ({
   };
   
   const handleRequestSubstitute = (period: Period) => {
+    // Only allow substitution for today's classes
+    if (period.day !== todayDay) {
+      toast({
+        title: "Unavailable",
+        description: "Substitution is only available for today's classes.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setPeriodToSubstitute(period);
     setSubstitutionError(null);
     setSubstitutionReason(null);
@@ -164,6 +186,22 @@ const TimetableView = ({
     setPeriodToSubstitute(null);
     setPotentialSubstitutes([]);
   };
+  
+  const handleMarkAbsent = (isAbsent: boolean) => {
+    markFacultyAbsent(facultyId, isAbsent);
+    setIsAbsent(isAbsent);
+    setIsAbsentDialogOpen(false);
+    
+    toast({
+      title: isAbsent ? "Marked as Absent" : "Marked as Available",
+      description: isAbsent ? 
+        "You have been marked as absent. Substitutes may be assigned to your classes." : 
+        "You are now marked as available for classes.",
+      className: isAbsent ? "bg-orange-50 border-orange-200" : "bg-green-50 border-green-200",
+    });
+    
+    onUpdateTimetable();
+  };
 
   const getDayLabel = (day: Day) => {
     switch(day) {
@@ -192,7 +230,52 @@ const TimetableView = ({
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Absent status toggle for faculty */}
+            {role === 'faculty' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant={isAbsent ? "destructive" : "outline"}
+                    className={isAbsent ? "" : "border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100"}
+                  >
+                    {isAbsent ? (
+                      <>
+                        <UserX size={16} className="mr-1" />
+                        Marked Absent
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck size={16} className="mr-1" />
+                        Mark as Absent
+                      </>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4">
+                  <div className="space-y-4">
+                    <h4 className="font-medium">{isAbsent ? "Change Absence Status" : "Mark Yourself as Absent"}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {isAbsent ? 
+                        "You are currently marked as absent. Would you like to mark yourself as available?" : 
+                        "Mark yourself as absent if you can't attend your scheduled classes. This will notify the system to find substitutes."
+                      }
+                    </p>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleMarkAbsent(!isAbsent)}
+                      >
+                        {isAbsent ? "Mark Available" : "Mark Absent"}
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+            
             <Button 
               size="sm" 
               variant={showTodayOnly ? "default" : "outline"}
@@ -313,6 +396,8 @@ const TimetableView = ({
                         size="icon"
                         onClick={() => handleRequestSubstitute(period)}
                         className="flex-shrink-0 bg-white text-orange-500 border-orange-300 hover:bg-orange-50"
+                        disabled={period.day !== todayDay}
+                        title={period.day !== todayDay ? "Substitutions only available for today's classes" : "Request substitute"}
                       >
                         <UserCheck size={18} />
                       </Button>
@@ -336,7 +421,7 @@ const TimetableView = ({
       />
       
       <AlertDialog open={isSubstituteDialogOpen} onOpenChange={setIsSubstituteDialogOpen}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-w-md bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Request Substitute Teacher</AlertDialogTitle>
             <AlertDialogDescription>
@@ -352,7 +437,7 @@ const TimetableView = ({
           </AlertDialogHeader>
           
           {substitutionError ? (
-            <Alert variant="destructive" className="my-4 bg-red-50 border-red-200 text-red-800">
+            <Alert variant="destructive" className="my-4 bg-rose-50 border-rose-200 text-rose-800">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Substitution Not Available</AlertTitle>
               <AlertDescription>
@@ -362,7 +447,7 @@ const TimetableView = ({
           ) : potentialSubstitutes.length > 0 ? (
             <>
               {substitutionReason && (
-                <Alert className="my-4 bg-green-50 border-green-200 text-green-800">
+                <Alert className="my-4 bg-teal-50 border-teal-200 text-teal-800">
                   <AlertTitle>Substitution Criteria</AlertTitle>
                   <AlertDescription>
                     {substitutionReason}
@@ -385,7 +470,7 @@ const TimetableView = ({
               </div>
             </>
           ) : (
-            <Alert variant="destructive" className="my-4 bg-red-50 border-red-200 text-red-800">
+            <Alert variant="destructive" className="my-4 bg-rose-50 border-rose-200 text-rose-800">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>No Eligible Substitutes</AlertTitle>
               <AlertDescription>

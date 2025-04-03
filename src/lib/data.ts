@@ -1,977 +1,766 @@
-import { Faculty, Period, FacultyStatus, Day, Student, User, UserRole, Semester } from "./types";
+import { Day, Faculty, FacultyStatus, Period, Semester, StatusCount, Student, User, UserRole } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
-// Get current date to determine semester (odd/even)
-const currentDate = new Date();
-const currentMonth = currentDate.getMonth();
-const currentYear = currentDate.getFullYear();
-
-// Determine if we're in odd or even semester based on month
-// Odd semesters: July-December (months 6-11)
-// Even semesters: January-June (months 0-5)
-const isOddSemester = currentMonth >= 6;
-
-// Helper to increment semester based on current system date
-const getNextSemester = (currentSem: Semester): Semester => {
-  const semesterMap: Record<Semester, Semester> = {
-    '1st': '2nd',
-    '2nd': '3rd',
-    '3rd': '4th',
-    '4th': '5th',
-    '5th': '6th',
-    '6th': '7th',
-    '7th': '8th',
-    '8th': '1st' // Reset for demonstration purposes
-  };
-  return semesterMap[currentSem];
-};
-
-// Sample faculty data with realistic information (no exposed passwords)
+// Mock data for faculty
 export const facultyData: Faculty[] = [
   {
-    id: "fac-001",
-    name: "Dr. Ramesh Kumar",
-    department: "Computer Science",
-    email: "ramesh.kumar@tech.edu",
-    phone: "555-101-2023",
-    status: "available",
-    username: "ramesh.kumar",
-    password: "secure-password-1"
+    id: 'f1',
+    name: 'Dr. John Smith',
+    department: 'Computer Science',
+    email: 'john.smith@university.edu',
+    phone: '555-123-4567',
+    status: 'available',
+    username: 'jsmith',
+    password: 'password123'
   },
   {
-    id: "fac-002",
-    name: "Dr. Priya Sharma",
-    department: "Electrical Engineering",
-    email: "priya.sharma@tech.edu",
-    phone: "555-102-2023",
-    status: "absent",
-    substitutedBy: "fac-003",
-    username: "priya.sharma",
-    password: "secure-password-2"
+    id: 'f2',
+    name: 'Dr. Sarah Johnson',
+    department: 'Computer Science',
+    email: 'sarah.johnson@university.edu',
+    phone: '555-234-5678',
+    status: 'available',
+    username: 'sjohnson',
+    password: 'password123'
   },
   {
-    id: "fac-003",
-    name: "Dr. Suresh Patel",
-    department: "Electrical Engineering",
-    email: "suresh.patel@tech.edu",
-    phone: "555-103-2023",
-    status: "substituting",
-    substituting: "fac-002",
-    username: "suresh.patel",
-    password: "secure-password-3"
+    id: 'f3',
+    name: 'Prof. Michael Brown',
+    department: 'Electrical Engineering',
+    email: 'michael.brown@university.edu',
+    phone: '555-345-6789',
+    status: 'available',
+    username: 'mbrown',
+    password: 'password123'
   },
   {
-    id: "fac-004",
-    name: "Dr. Ananya Singh",
-    department: "Mathematics",
-    email: "ananya.singh@tech.edu",
-    phone: "555-104-2023",
-    status: "available",
-    username: "ananya.singh",
-    password: "secure-password-4"
+    id: 'f4',
+    name: 'Dr. Emily Davis',
+    department: 'Computer Science',
+    email: 'emily.davis@university.edu',
+    phone: '555-456-7890',
+    status: 'available',
+    username: 'edavis',
+    password: 'password123'
   },
   {
-    id: "fac-005",
-    name: "Dr. Rajesh Gupta",
-    department: "Mechanical Engineering",
-    email: "rajesh.gupta@tech.edu",
-    phone: "555-105-2023",
-    status: "absent",
-    username: "rajesh.gupta",
-    password: "secure-password-5"
+    id: 'f5',
+    name: 'Prof. Robert Wilson',
+    department: 'Electrical Engineering',
+    email: 'robert.wilson@university.edu',
+    phone: '555-567-8901',
+    status: 'available',
+    username: 'rwilson',
+    password: 'password123'
   },
   {
-    id: "fac-006",
-    name: "Dr. Meera Desai",
-    department: "Computer Science",
-    email: "meera.desai@tech.edu",
-    phone: "555-106-2023",
-    status: "available",
-    username: "meera.desai",
-    password: "secure-password-6"
+    id: 'f6',
+    name: 'Dr. Jennifer Lee',
+    department: 'Computer Science',
+    email: 'jennifer.lee@university.edu',
+    phone: '555-678-9012',
+    status: 'available',
+    username: 'jlee',
+    password: 'password123'
   },
   {
-    id: "fac-007",
-    name: "Dr. Vikram Mehta",
-    department: "Electronics & Communication",
-    email: "vikram.mehta@tech.edu",
-    phone: "555-107-2023",
-    status: "substituted",
-    substitutedBy: "fac-008",
-    username: "vikram.mehta",
-    password: "secure-password-7"
+    id: 'f7',
+    name: 'Prof. David Martinez',
+    department: 'Mechanical Engineering',
+    email: 'david.martinez@university.edu',
+    phone: '555-789-0123',
+    status: 'available',
+    username: 'dmartinez',
+    password: 'password123'
   },
   {
-    id: "fac-008",
-    name: "Dr. Neha Verma",
-    department: "Electronics & Communication",
-    email: "neha.verma@tech.edu",
-    phone: "555-108-2023",
-    status: "substituting",
-    substituting: "fac-007",
-    username: "neha.verma",
-    password: "secure-password-8"
-  },
-  {
-    id: "fac-009",
-    name: "Dr. Arun Joshi",
-    department: "Civil Engineering",
-    email: "arun.joshi@tech.edu",
-    phone: "555-109-2023",
-    status: "available",
-    username: "arun.joshi",
-    password: "secure-password-9"
-  },
-  {
-    id: "fac-010",
-    name: "Dr. Kavita Reddy",
-    department: "Chemical Engineering",
-    email: "kavita.reddy@tech.edu",
-    phone: "555-110-2023",
-    status: "available",
-    username: "kavita.reddy",
-    password: "secure-password-10"
+    id: 'f8',
+    name: 'Dr. Lisa Anderson',
+    department: 'Electrical Engineering',
+    email: 'lisa.anderson@university.edu',
+    phone: '555-890-1234',
+    status: 'available',
+    username: 'landerson',
+    password: 'password123'
   }
 ];
 
-// Sample student data with realistic information
+// Mock data for students
 export const studentData: Student[] = [
   {
-    id: "std-001",
-    name: "Aarav Patel",
-    rollNumber: "CSE-2020-001",
-    semester: isOddSemester ? '1st' : '2nd',
-    department: "Computer Science",
-    email: "aarav.patel@student.tech.edu",
-    username: "aarav.patel",
-    password: "student-password-1"
+    id: 's1',
+    name: 'Alex Johnson',
+    rollNumber: 'CS2021001',
+    semester: '5th',
+    department: 'Computer Science',
+    email: 'alex.johnson@university.edu',
+    username: 'ajohnson',
+    password: 'password123'
   },
   {
-    id: "std-002",
-    name: "Diya Sharma",
-    rollNumber: "CSE-2020-002",
-    semester: isOddSemester ? '1st' : '2nd',
-    department: "Computer Science",
-    email: "diya.sharma@student.tech.edu",
-    username: "diya.sharma",
-    password: "student-password-2"
+    id: 's2',
+    name: 'Emma Williams',
+    rollNumber: 'CS2021002',
+    semester: '5th',
+    department: 'Computer Science',
+    email: 'emma.williams@university.edu',
+    username: 'ewilliams',
+    password: 'password123'
   },
   {
-    id: "std-003",
-    name: "Arjun Singh",
-    rollNumber: "EEE-2020-001",
-    semester: isOddSemester ? '3rd' : '4th',
-    department: "Electrical Engineering",
-    email: "arjun.singh@student.tech.edu",
-    username: "arjun.singh",
-    password: "student-password-3"
+    id: 's3',
+    name: 'Ryan Davis',
+    rollNumber: 'EE2021001',
+    semester: '5th',
+    department: 'Electrical Engineering',
+    email: 'ryan.davis@university.edu',
+    username: 'rdavis',
+    password: 'password123'
   },
   {
-    id: "std-004",
-    name: "Ishaan Kumar",
-    rollNumber: "EEE-2020-002",
-    semester: isOddSemester ? '3rd' : '4th',
-    department: "Electrical Engineering",
-    email: "ishaan.kumar@student.tech.edu",
-    username: "ishaan.kumar",
-    password: "student-password-4"
+    id: 's4',
+    name: 'Sophia Miller',
+    rollNumber: 'CS2021003',
+    semester: '5th',
+    department: 'Computer Science',
+    email: 'sophia.miller@university.edu',
+    username: 'smiller',
+    password: 'password123'
   },
   {
-    id: "std-005",
-    name: "Advait Reddy",
-    rollNumber: "ME-2019-001",
-    semester: isOddSemester ? '5th' : '6th',
-    department: "Mechanical Engineering",
-    email: "advait.reddy@student.tech.edu",
-    username: "advait.reddy",
-    password: "student-password-5"
-  },
-  {
-    id: "std-006",
-    name: "Anvi Desai",
-    rollNumber: "ME-2019-002",
-    semester: isOddSemester ? '5th' : '6th',
-    department: "Mechanical Engineering",
-    email: "anvi.desai@student.tech.edu",
-    username: "anvi.desai",
-    password: "student-password-6"
-  },
-  {
-    id: "std-007",
-    name: "Vihaan Mehta",
-    rollNumber: "ECE-2019-001",
-    semester: isOddSemester ? '5th' : '6th',
-    department: "Electronics & Communication",
-    email: "vihaan.mehta@student.tech.edu",
-    username: "vihaan.mehta",
-    password: "student-password-7"
-  },
-  {
-    id: "std-008",
-    name: "Aanya Joshi",
-    rollNumber: "ECE-2019-002",
-    semester: isOddSemester ? '5th' : '6th',
-    department: "Electronics & Communication",
-    email: "aanya.joshi@student.tech.edu",
-    username: "aanya.joshi",
-    password: "student-password-8"
-  },
-  {
-    id: "std-009",
-    name: "Reyansh Gupta",
-    rollNumber: "CE-2018-001",
-    semester: isOddSemester ? '7th' : '8th',
-    department: "Civil Engineering",
-    email: "reyansh.gupta@student.tech.edu",
-    username: "reyansh.gupta",
-    password: "student-password-9"
-  },
-  {
-    id: "std-010",
-    name: "Avni Sharma",
-    rollNumber: "CE-2018-002",
-    semester: isOddSemester ? '7th' : '8th',
-    department: "Civil Engineering",
-    email: "avni.sharma@student.tech.edu",
-    username: "avni.sharma",
-    password: "student-password-10"
-  },
-  {
-    id: "std-011",
-    name: "Dhruv Verma",
-    rollNumber: "CHE-2018-001",
-    semester: isOddSemester ? '7th' : '8th',
-    department: "Chemical Engineering",
-    email: "dhruv.verma@student.tech.edu",
-    username: "dhruv.verma",
-    password: "student-password-11"
-  },
-  {
-    id: "std-012",
-    name: "Saanvi Mishra",
-    rollNumber: "CHE-2018-002",
-    semester: isOddSemester ? '7th' : '8th',
-    department: "Chemical Engineering",
-    email: "saanvi.mishra@student.tech.edu",
-    username: "saanvi.mishra",
-    password: "student-password-12"
+    id: 's5',
+    name: 'Ethan Brown',
+    rollNumber: 'ME2021001',
+    semester: '5th',
+    department: 'Mechanical Engineering',
+    email: 'ethan.brown@university.edu',
+    username: 'ebrown',
+    password: 'password123'
   }
 ];
 
-// Admin user
-export const adminUser: User = {
-  id: "admin-001",
-  username: "admin",
-  password: "admin123",
-  role: "admin"
-};
-
-// Generate users from faculty and students
-export const generateUsers = (): User[] => {
-  const users: User[] = [adminUser];
-  
-  facultyData.forEach(faculty => {
-    users.push({
-      id: `user-${faculty.id}`,
-      username: faculty.username,
-      password: faculty.password,
-      role: "faculty",
-      facultyId: faculty.id
-    });
-  });
-  
-  studentData.forEach(student => {
-    users.push({
-      id: `user-${student.id}`,
-      username: student.username,
-      password: student.password,
-      role: "student",
-      studentId: student.id
-    });
-  });
-  
-  return users;
-};
-
-// Users data
-export const userData = generateUsers();
-
-// Time periods
-const periods = [
-  { number: 1, start: "09:00", end: "09:50" },
-  { number: 2, start: "10:00", end: "10:50" },
-  { number: 3, start: "11:00", end: "11:50" },
-  { number: 4, start: "12:00", end: "12:50" },
-  { number: 5, start: "13:00", end: "13:50" }, // Lunch break would follow
-  { number: 6, start: "14:00", end: "14:50" },
-  { number: 7, start: "15:00", end: "15:50" },
-  { number: 8, start: "16:00", end: "16:50" },
+// Mock data for users
+export const userData: User[] = [
+  {
+    id: 'u1',
+    role: 'admin',
+    username: 'admin',
+    password: 'admin123'
+  },
+  {
+    id: 'u2',
+    role: 'faculty',
+    username: 'jsmith',
+    password: 'password123',
+    facultyId: 'f1'
+  },
+  {
+    id: 'u3',
+    role: 'faculty',
+    username: 'sjohnson',
+    password: 'password123',
+    facultyId: 'f2'
+  },
+  {
+    id: 'u4',
+    role: 'student',
+    username: 'ajohnson',
+    password: 'password123',
+    studentId: 's1'
+  }
 ];
 
-// Course codes with realistic engineering subjects
-const courses = [
-  // Computer Science courses
-  { code: "CS101", title: "Introduction to Programming", semester: "1st", department: "Computer Science" },
-  { code: "CS201", title: "Data Structures & Algorithms", semester: "3rd", department: "Computer Science" },
-  { code: "CS301", title: "Database Management Systems", semester: "5th", department: "Computer Science" },
-  { code: "CS401", title: "Machine Learning", semester: "7th", department: "Computer Science" },
-  { code: "CS102", title: "Computer Architecture", semester: "2nd", department: "Computer Science" },
-  { code: "CS202", title: "Operating Systems", semester: "4th", department: "Computer Science" },
-  { code: "CS302", title: "Software Engineering", semester: "6th", department: "Computer Science" },
-  { code: "CS402", title: "Artificial Intelligence", semester: "8th", department: "Computer Science" },
+// Mock data for timetables
+const timetableData: Period[] = [
+  // Dr. John Smith's periods
+  {
+    id: 'p1',
+    day: 'Monday',
+    periodNumber: 1,
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
+    courseCode: 'CS301',
+    courseTitle: 'Data Structures',
+    facultyId: 'f1',
+    semester: '5th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p2',
+    day: 'Monday',
+    periodNumber: 3,
+    startTime: '11:00 AM',
+    endTime: '12:00 PM',
+    courseCode: 'CS302',
+    courseTitle: 'Algorithms',
+    facultyId: 'f1',
+    semester: '5th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p3',
+    day: 'Tuesday',
+    periodNumber: 2,
+    startTime: '10:00 AM',
+    endTime: '11:00 AM',
+    courseCode: 'CS301',
+    courseTitle: 'Data Structures',
+    facultyId: 'f1',
+    semester: '5th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p4',
+    day: 'Wednesday',
+    periodNumber: 4,
+    startTime: '12:00 PM',
+    endTime: '01:00 PM',
+    courseCode: 'CS302',
+    courseTitle: 'Algorithms',
+    facultyId: 'f1',
+    semester: '5th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p5',
+    day: 'Thursday',
+    periodNumber: 1,
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
+    courseCode: 'CS301',
+    courseTitle: 'Data Structures',
+    facultyId: 'f1',
+    semester: '5th',
+    department: 'Computer Science'
+  },
   
-  // Electrical Engineering courses
-  { code: "EE101", title: "Basic Electrical Engineering", semester: "1st", department: "Electrical Engineering" },
-  { code: "EE201", title: "Circuit Theory", semester: "3rd", department: "Electrical Engineering" },
-  { code: "EE301", title: "Power Systems", semester: "5th", department: "Electrical Engineering" },
-  { code: "EE401", title: "Power Electronics", semester: "7th", department: "Electrical Engineering" },
-  { code: "EE102", title: "Electrical Measurements", semester: "2nd", department: "Electrical Engineering" },
-  { code: "EE202", title: "Analog Electronics", semester: "4th", department: "Electrical Engineering" },
-  { code: "EE302", title: "Control Systems", semester: "6th", department: "Electrical Engineering" },
-  { code: "EE402", title: "Electric Drives", semester: "8th", department: "Electrical Engineering" },
+  // Dr. Sarah Johnson's periods
+  {
+    id: 'p6',
+    day: 'Monday',
+    periodNumber: 2,
+    startTime: '10:00 AM',
+    endTime: '11:00 AM',
+    courseCode: 'CS401',
+    courseTitle: 'Database Systems',
+    facultyId: 'f2',
+    semester: '7th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p7',
+    day: 'Tuesday',
+    periodNumber: 3,
+    startTime: '11:00 AM',
+    endTime: '12:00 PM',
+    courseCode: 'CS402',
+    courseTitle: 'Web Development',
+    facultyId: 'f2',
+    semester: '7th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p8',
+    day: 'Wednesday',
+    periodNumber: 2,
+    startTime: '10:00 AM',
+    endTime: '11:00 AM',
+    courseCode: 'CS401',
+    courseTitle: 'Database Systems',
+    facultyId: 'f2',
+    semester: '7th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p9',
+    day: 'Thursday',
+    periodNumber: 3,
+    startTime: '11:00 AM',
+    endTime: '12:00 PM',
+    courseCode: 'CS402',
+    courseTitle: 'Web Development',
+    facultyId: 'f2',
+    semester: '7th',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p10',
+    day: 'Friday',
+    periodNumber: 1,
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
+    courseCode: 'CS401',
+    courseTitle: 'Database Systems',
+    facultyId: 'f2',
+    semester: '7th',
+    department: 'Computer Science'
+  },
   
-  // Mechanical Engineering courses
-  { code: "ME101", title: "Engineering Mechanics", semester: "1st", department: "Mechanical Engineering" },
-  { code: "ME201", title: "Thermodynamics", semester: "3rd", department: "Mechanical Engineering" },
-  { code: "ME301", title: "Fluid Mechanics", semester: "5th", department: "Mechanical Engineering" },
-  { code: "ME401", title: "Automobile Engineering", semester: "7th", department: "Mechanical Engineering" },
-  { code: "ME102", title: "Material Science", semester: "2nd", department: "Mechanical Engineering" },
-  { code: "ME202", title: "Manufacturing Processes", semester: "4th", department: "Mechanical Engineering" },
-  { code: "ME302", title: "Heat Transfer", semester: "6th", department: "Mechanical Engineering" },
-  { code: "ME402", title: "Robotics", semester: "8th", department: "Mechanical Engineering" },
+  // Prof. Michael Brown's periods
+  {
+    id: 'p11',
+    day: 'Monday',
+    periodNumber: 4,
+    startTime: '12:00 PM',
+    endTime: '01:00 PM',
+    courseCode: 'EE301',
+    courseTitle: 'Circuit Theory',
+    facultyId: 'f3',
+    semester: '5th',
+    department: 'Electrical Engineering'
+  },
+  {
+    id: 'p12',
+    day: 'Tuesday',
+    periodNumber: 4,
+    startTime: '12:00 PM',
+    endTime: '01:00 PM',
+    courseCode: 'EE302',
+    courseTitle: 'Digital Electronics',
+    facultyId: 'f3',
+    semester: '5th',
+    department: 'Electrical Engineering'
+  },
+  {
+    id: 'p13',
+    day: 'Wednesday',
+    periodNumber: 1,
+    startTime: '09:00 AM',
+    endTime: '10:00 AM',
+    courseCode: 'EE301',
+    courseTitle: 'Circuit Theory',
+    facultyId: 'f3',
+    semester: '5th',
+    department: 'Electrical Engineering'
+  },
   
-  // Electronics & Communication courses
-  { code: "EC101", title: "Electronic Devices", semester: "1st", department: "Electronics & Communication" },
-  { code: "EC201", title: "Digital Electronics", semester: "3rd", department: "Electronics & Communication" },
-  { code: "EC301", title: "Communication Systems", semester: "5th", department: "Electronics & Communication" },
-  { code: "EC401", title: "VLSI Design", semester: "7th", department: "Electronics & Communication" },
-  { code: "EC102", title: "Network Theory", semester: "2nd", department: "Electronics & Communication" },
-  { code: "EC202", title: "Signals & Systems", semester: "4th", department: "Electronics & Communication" },
-  { code: "EC302", title: "Microprocessors", semester: "6th", department: "Electronics & Communication" },
-  { code: "EC402", title: "Wireless Communication", semester: "8th", department: "Electronics & Communication" },
-  
-  // Civil Engineering courses
-  { code: "CE101", title: "Engineering Drawing", semester: "1st", department: "Civil Engineering" },
-  { code: "CE201", title: "Structural Analysis", semester: "3rd", department: "Civil Engineering" },
-  { code: "CE301", title: "Concrete Structures", semester: "5th", department: "Civil Engineering" },
-  { code: "CE401", title: "Transportation Engineering", semester: "7th", department: "Civil Engineering" },
-  { code: "CE102", title: "Surveying", semester: "2nd", department: "Civil Engineering" },
-  { code: "CE202", title: "Soil Mechanics", semester: "4th", department: "Civil Engineering" },
-  { code: "CE302", title: "Hydraulic Structures", semester: "6th", department: "Civil Engineering" },
-  { code: "CE402", title: "Construction Management", semester: "8th", department: "Civil Engineering" },
-  
-  // Chemical Engineering courses
-  { code: "CH101", title: "Chemical Process Calculations", semester: "1st", department: "Chemical Engineering" },
-  { code: "CH201", title: "Chemical Thermodynamics", semester: "3rd", department: "Chemical Engineering" },
-  { code: "CH301", title: "Mass Transfer Operations", semester: "5th", department: "Chemical Engineering" },
-  { code: "CH401", title: "Process Control", semester: "7th", department: "Chemical Engineering" },
-  { code: "CH102", title: "Fluid Flow Operations", semester: "2nd", department: "Chemical Engineering" },
-  { code: "CH202", title: "Heat Transfer Operations", semester: "4th", department: "Chemical Engineering" },
-  { code: "CH302", title: "Chemical Reaction Engineering", semester: "6th", department: "Chemical Engineering" },
-  { code: "CH402", title: "Plant Design", semester: "8th", department: "Chemical Engineering" },
-  
-  // Mathematics courses (common to all departments)
-  { code: "MA101", title: "Engineering Mathematics I", semester: "1st", department: "Mathematics" },
-  { code: "MA102", title: "Engineering Mathematics II", semester: "2nd", department: "Mathematics" },
-  { code: "MA201", title: "Engineering Mathematics III", semester: "3rd", department: "Mathematics" },
-  { code: "MA202", title: "Engineering Mathematics IV", semester: "4th", department: "Mathematics" },
+  // Dr. Emily Davis's periods
+  {
+    id: 'p14',
+    day: 'Monday',
+    periodNumber: 5,
+    startTime: '02:00 PM',
+    endTime: '03:00 PM',
+    courseCode: 'CS201',
+    courseTitle: 'Programming Fundamentals',
+    facultyId: 'f4',
+    semester: '3rd',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p15',
+    day: 'Wednesday',
+    periodNumber: 5,
+    startTime: '02:00 PM',
+    endTime: '03:00 PM',
+    courseCode: 'CS201',
+    courseTitle: 'Programming Fundamentals',
+    facultyId: 'f4',
+    semester: '3rd',
+    department: 'Computer Science'
+  },
+  {
+    id: 'p16',
+    day: 'Friday',
+    periodNumber: 5,
+    startTime: '02:00 PM',
+    endTime: '03:00 PM',
+    courseCode: 'CS201',
+    courseTitle: 'Programming Fundamentals',
+    facultyId: 'f4',
+    semester: '3rd',
+    department: 'Computer Science'
+  }
 ];
 
-// Generate sample timetable data
-const days: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-// Storage for all generated timetables to maintain consistency
-let allTimetables: Record<string, Period[]> = {};
-
-// Function to get today's day name
-export const getTodayDay = (): Day => {
-  const dayIndex = new Date().getDay() - 1; // 0 is Sunday in JS
-  if (dayIndex < 0 || dayIndex >= days.length) {
-    return "Monday"; // Default to Monday if weekend
-  }
-  return days[dayIndex];
-};
-
-// Generate timetable for a faculty
-export const generateTimetable = (facultyId: string): Period[] => {
-  // If we've already generated this timetable, return it
-  if (allTimetables[facultyId]) {
-    return allTimetables[facultyId];
-  }
-  
-  const timetable: Period[] = [];
-  const faculty = facultyData.find(f => f.id === facultyId);
-  
-  if (!faculty) return [];
-  
-  // Generate 3-4 periods per day
-  days.forEach(day => {
-    const periodsPerDay = Math.floor(Math.random() * 2) + 3; // 3 or 4 periods
-    const dayPeriods = new Set<number>();
-    
-    // Select random periods for this day
-    while (dayPeriods.size < periodsPerDay) {
-      const periodIndex = Math.floor(Math.random() * periods.length);
-      dayPeriods.add(periodIndex);
-    }
-    
-    // Convert to actual period objects
-    dayPeriods.forEach(periodIndex => {
-      const period = periods[periodIndex];
-      
-      // Find courses in this faculty's department
-      const departmentCourses = courses.filter(c => c.department === faculty.department);
-      
-      // Filter courses based on odd/even semesters if needed
-      const filteredCourses = departmentCourses.filter(course => {
-        const semNumber = parseInt(course.semester.charAt(0));
-        return isOddSemester ? semNumber % 2 !== 0 : semNumber % 2 === 0;
-      });
-      
-      const courseIndex = Math.floor(Math.random() * filteredCourses.length);
-      const course = filteredCourses[courseIndex] || departmentCourses[0]; // Fallback if no matching courses
-      
-      let periodData: Period = {
-        id: `${facultyId}-${day}-${period.number}`,
-        day: day,
-        periodNumber: period.number,
-        startTime: period.start,
-        endTime: period.end,
-        courseCode: course.code,
-        courseTitle: course.title,
-        facultyId: facultyId,
-        semester: course.semester as Semester,
-        department: course.department
-      };
-      
-      // If faculty is substituted, add original faculty
-      if (faculty.status === 'substituted' && faculty.substitutedBy) {
-        periodData.originalFacultyId = facultyId;
-        periodData.facultyId = faculty.substitutedBy;
-      }
-      
-      // If faculty is substituting, check if this period belongs to them
-      if (faculty.status === 'substituting' && faculty.substituting) {
-        // 50% chance this is their regular period, 50% chance it's a substitution
-        if (Math.random() > 0.5) {
-          periodData.originalFacultyId = faculty.substituting;
-        }
-      }
-      
-      timetable.push(periodData);
-    });
-  });
-  
-  // Store this timetable
-  allTimetables[facultyId] = timetable;
-  
-  return timetable;
-};
-
-// Get all timetables
-export const getAllTimetables = () => {
-  return facultyData.map(faculty => ({
-    facultyId: faculty.id,
-    periods: generateTimetable(faculty.id)
-  }));
-};
-
-// Get timetable for a specific semester and department
-export const getTimetableBySemesterAndDepartment = (semester: Semester, department: string): Period[] => {
-  let allPeriods: Period[] = [];
-  
-  // Get all faculty timetables
-  facultyData.forEach(faculty => {
-    const facultyTimetable = generateTimetable(faculty.id);
-    
-    // Filter periods by semester and department
-    const filteredPeriods = facultyTimetable.filter(
-      period => period.semester === semester && period.department === department
-    );
-    
-    allPeriods = [...allPeriods, ...filteredPeriods];
-  });
-  
-  return allPeriods;
-};
-
-// Get faculty status counts
-export const getFacultyStatusCounts = () => {
-  return facultyData.reduce(
-    (counts, faculty) => {
-      counts[faculty.status]++;
-      return counts;
-    },
-    { available: 0, absent: 0, substituting: 0, substituted: 0 }
-  );
-};
-
-// Function to get a faculty by ID
-export const getFacultyById = (id: string) => {
-  return facultyData.find(faculty => faculty.id === id);
-};
-
-// Function to get a student by ID
-export const getStudentById = (id: string) => {
-  return studentData.find(student => student.id === id);
-};
-
-// Function to get a faculty's timetable
-export const getFacultyTimetable = (id: string) => {
-  return generateTimetable(id);
-};
-
-// Function to get a faculty's timetable for today
-export const getFacultyTimetableForToday = (id: string) => {
-  const todayDay = getTodayDay();
-  return generateTimetable(id).filter(period => period.day === todayDay);
-};
-
-// Function to authenticate a user
-export const authenticateUser = (username: string, password: string): User | null => {
-  // For demo purposes only
-  // For admin, faculty demo logins
-  if (username === 'admin' && password === 'admin123') {
-    return adminUser;
-  }
-  
-  if (username === 'faculty' && password === 'faculty123') {
-    return {
-      id: "user-demo-faculty",
-      username: "faculty",
-      password: "faculty123",
-      role: "faculty",
-      facultyId: "fac-001" // Dr. Ramesh Kumar
-    };
-  }
-  
-  if (username === 'student' && password === 'student123') {
-    return {
-      id: "user-demo-student",
-      username: "student",
-      password: "student123",
-      role: "student",
-      studentId: "std-001" // Aarav Patel
-    };
-  }
-  
-  // For regular accounts
-  const user = userData.find(u => u.username === username && u.password === password);
-  return user || null;
-};
-
-// Update a faculty's status
-export const updateFacultyStatus = (
-  id: string, 
-  status: FacultyStatus, 
-  substitutedBy?: string,
-  substituting?: string
-) => {
-  const facultyIndex = facultyData.findIndex(f => f.id === id);
-  
-  if (facultyIndex >= 0) {
-    facultyData[facultyIndex] = {
-      ...facultyData[facultyIndex],
-      status,
-      substitutedBy,
-      substituting
-    };
-    
-    // Clear the cached timetable to regenerate with new status
-    if (allTimetables[id]) {
-      delete allTimetables[id];
-    }
-    
-    return facultyData[facultyIndex];
-  }
-  
-  return null;
-};
-
-// Enhanced algorithm for finding potential substitutes based on multiple criteria
-export const findPotentialSubstitutes = (period: Period, absentFacultyId: string): Faculty[] => {
-  const absentFaculty = getFacultyById(absentFacultyId);
-  if (!absentFaculty) return [];
-  
-  // Step 1: Find all faculty in the same department
-  const sameDeptFaculty = facultyData.filter(f => 
-    f.id !== absentFacultyId && 
-    f.department === absentFaculty.department && 
-    f.status === 'available'
-  );
-  
-  if (sameDeptFaculty.length === 0) {
-    return []; // No faculty available in the same department
-  }
-  
-  // Step 2: Check which faculty members don't have a class at this time
-  const availableFaculty = sameDeptFaculty.filter(faculty => {
-    const facultyTimetable = getFacultyTimetable(faculty.id);
-    // Check if faculty has no class at this time on this day
-    const conflictingPeriod = facultyTimetable.find(p => 
-      p.day === period.day && 
-      p.periodNumber === period.periodNumber
-    );
-    
-    return !conflictingPeriod;
-  });
-  
-  if (availableFaculty.length === 0) {
-    return []; // No faculty available at this time slot
-  }
-  
-  // Step 3: Score each faculty based on criteria:
-  // - Same semester (highest priority)
-  // - Same or related subject (medium priority)
-  // - Appropriate teaching load (lowest priority)
-  const scoredFaculty = availableFaculty.map(faculty => {
-    const facultyTimetable = getFacultyTimetable(faculty.id);
-    
-    // Check if faculty teaches the same semester
-    const teachingSameSemester = facultyTimetable.some(p => p.semester === period.semester);
-    
-    // Check if faculty teaches the same subject or related subject
-    const courseCodePrefix = period.courseCode.substring(0, 2); // e.g., CS, EE, ME
-    const teachingSimilarSubject = facultyTimetable.some(p => 
-      p.courseCode === period.courseCode || // Exact same course
-      p.courseCode.startsWith(courseCodePrefix) // Related course in same department
-    );
-    
-    // Calculate teaching load (lower is better for substitution)
-    const teachingLoad = facultyTimetable.length;
-    
-    // Calculate score (higher is better)
-    let score = 0;
-    if (teachingSameSemester) score += 10; // Highest priority
-    if (teachingSimilarSubject) score += 5; // Medium priority
-    score += (10 - Math.min(teachingLoad, 10))/2; // Lower teaching load gives higher score (max 5 points)
-    
-    return {
-      faculty,
-      score,
-      teachingSameSemester,
-      teachingSimilarSubject,
-      teachingLoad
-    };
-  });
-  
-  // Sort by score (descending)
-  scoredFaculty.sort((a, b) => b.score - a.score);
-  
-  // Return the faculties in order of suitability
-  return scoredFaculty.map(item => item.faculty);
-};
-
-// Enhancing the assignSubstitute function to provide better error messages
-export const assignSubstitute = (periodId: string, absentFacultyId: string): { 
-  success: boolean; 
-  message: string; 
-  newFacultyId?: string;
-  substitutes?: Faculty[];
-  reason?: string;
-} => {
-  // Find the period
-  let foundPeriod: Period | undefined;
-  let foundFacultyTimetable: Period[] = [];
-  
-  // Search through all timetables (inefficient but works for demo)
-  facultyData.forEach(faculty => {
-    const timetable = generateTimetable(faculty.id);
-    const period = timetable.find(p => p.id === periodId);
-    if (period) {
-      foundPeriod = period;
-      foundFacultyTimetable = timetable;
-    }
-  });
-  
-  if (!foundPeriod) {
-    return { 
-      success: false, 
-      message: "Period not found", 
-      reason: "period_not_found" 
-    };
-  }
-  
-  // Find potential substitutes with our enhanced algorithm
-  const potentialSubstitutes = findPotentialSubstitutes(foundPeriod, absentFacultyId);
-  
-  if (potentialSubstitutes.length === 0) {
-    // Provide specific reasons for failure
-    const absentFaculty = getFacultyById(absentFacultyId);
-    
-    // Check if there are any faculty in the same department
-    const sameDeptFaculty = facultyData.filter(f => 
-      f.id !== absentFacultyId && 
-      f.department === absentFaculty?.department && 
-      f.status === 'available'
-    );
-    
-    if (sameDeptFaculty.length === 0) {
-      return { 
-        success: false, 
-        message: `No available faculty in the ${absentFaculty?.department} department. Please consider faculty from related departments.`,
-        reason: "no_same_department" 
-      };
-    }
-    
-    // Check if everyone is teaching at this time
-    return { 
-      success: false, 
-      message: `All eligible faculty members are teaching at this time (${foundPeriod.startTime}-${foundPeriod.endTime} on ${foundPeriod.day}). Please reschedule the class.`,
-      reason: "time_conflict" 
-    };
-  }
-  
-  // We have found at least one suitable substitute
-  const substitute = potentialSubstitutes[0];
-  
-  // Update faculty status for the default substitute
-  updateFacultyStatus(absentFacultyId, 'absent', substitute.id);
-  updateFacultyStatus(substitute.id, 'substituting', absentFacultyId);
-  
-  // Clear cached timetables to regenerate
-  delete allTimetables[absentFacultyId];
-  delete allTimetables[substitute.id];
-  
-  // Log the substitution
-  logSubstitution(absentFacultyId, substitute.id, foundPeriod.id, `${foundPeriod.courseCode} - ${foundPeriod.courseTitle}`);
-  
-  // Create detailed success message with substitution criteria
-  let substitutionDetails = "";
-  
-  // Check if substitute teaches the same semester
-  const substituteTimetable = getFacultyTimetable(substitute.id);
-  const teachingSameSemester = substituteTimetable.some(p => p.semester === foundPeriod.semester);
-  if (teachingSameSemester) {
-    substitutionDetails += "✓ Teaching same semester. ";
-  }
-  
-  // Check if substitute teaches the same/similar subject
-  const courseCodePrefix = foundPeriod.courseCode.substring(0, 2);
-  const teachingSimilarSubject = substituteTimetable.some(p => 
-    p.courseCode === foundPeriod.courseCode || 
-    p.courseCode.startsWith(courseCodePrefix)
-  );
-  if (teachingSimilarSubject) {
-    substitutionDetails += "✓ Teaching similar subjects. ";
-  }
-  
-  substitutionDetails += `✓ Available during required time slot.`;
-  
-  return { 
-    success: true, 
-    message: `${potentialSubstitutes.length} potential substitute(s) found. ${substitute.name} has been assigned as the most suitable substitute.`,
-    newFacultyId: substitute.id,
-    substitutes: potentialSubstitutes,
-    reason: substitutionDetails
-  };
-};
-
-// Substitution log to track all substitution events
+// Substitution log
 const substitutionLog: {
   id: string;
-  date: Date;
   absentFacultyId: string;
-  substituteId: string;
+  absentFacultyName: string;
+  substituteId?: string;
+  substituteName?: string;
   periodId: string;
   course: string;
   day: Day;
   timeSlot: string;
+  date: Date;
   success: boolean;
   reason?: string;
-}[] = [];
-
-// Record a substitution in the log
-export const logSubstitution = (absentFacultyId: string, substituteId: string, periodId: string, course: string) => {
-  // Find the period
-  const allTimetables = getAllTimetables();
-  let period: Period | undefined;
-  
-  // Search through all timetables
-  allTimetables.forEach(timetable => {
-    const foundPeriod = timetable.periods.find(p => p.id === periodId);
-    if (foundPeriod) {
-      period = foundPeriod;
-    }
-  });
-  
-  if (!period) return;
-  
-  substitutionLog.unshift({
-    id: `sub-${Date.now()}`,
-    date: new Date(),
-    absentFacultyId,
-    substituteId,
-    periodId,
-    course,
-    day: period.day,
-    timeSlot: `${period.startTime}-${period.endTime}`,
+}[] = [
+  {
+    id: 'sl1',
+    absentFacultyId: 'f1',
+    absentFacultyName: 'Dr. John Smith',
+    substituteId: 'f2',
+    substituteName: 'Dr. Sarah Johnson',
+    periodId: 'p1',
+    course: 'CS301 - Data Structures',
+    day: 'Monday',
+    timeSlot: '09:00 AM - 10:00 AM',
+    date: new Date(Date.now() - 86400000), // Yesterday
     success: true
-  });
-  
-  // Limit log size
-  if (substitutionLog.length > 100) {
-    substitutionLog.pop();
+  },
+  {
+    id: 'sl2',
+    absentFacultyId: 'f3',
+    absentFacultyName: 'Prof. Michael Brown',
+    substituteId: 'f5',
+    substituteName: 'Prof. Robert Wilson',
+    periodId: 'p11',
+    course: 'EE301 - Circuit Theory',
+    day: 'Monday',
+    timeSlot: '12:00 PM - 01:00 PM',
+    date: new Date(Date.now() - 172800000), // 2 days ago
+    success: true
+  },
+  {
+    id: 'sl3',
+    absentFacultyId: 'f4',
+    absentFacultyName: 'Dr. Emily Davis',
+    periodId: 'p14',
+    course: 'CS201 - Programming Fundamentals',
+    day: 'Monday',
+    timeSlot: '02:00 PM - 03:00 PM',
+    date: new Date(Date.now() - 259200000), // 3 days ago
+    success: false,
+    reason: 'No eligible substitute found with matching expertise'
   }
+];
+
+// Keep track of absent faculty with dates
+let absentFaculty: Record<string, Date> = {};
+
+// Function to mark faculty as absent or available
+export const markFacultyAbsent = (facultyId: string, isAbsent: boolean) => {
+  if (isAbsent) {
+    absentFaculty[facultyId] = new Date();
+    
+    // Update faculty status in the facultyData array
+    const faculty = facultyData.find(f => f.id === facultyId);
+    if (faculty) {
+      faculty.status = 'absent';
+    }
+  } else {
+    delete absentFaculty[facultyId];
+    
+    // Update faculty status in the facultyData array
+    const faculty = facultyData.find(f => f.id === facultyId);
+    if (faculty) {
+      faculty.status = 'available';
+      faculty.substitutedBy = undefined;
+    }
+  }
+  
+  // Reset any substitution assignments
+  resetSubstitutions(facultyId);
 };
 
-// Log substitution failure
-export const logSubstitutionFailure = (absentFacultyId: string, periodId: string, reason: string) => {
-  // Find the period
-  const allTimetables = getAllTimetables();
-  let period: Period | undefined;
+// Function to check if faculty is marked as absent
+export const isFacultyAbsent = (facultyId: string): boolean => {
+  // Check if faculty is in the absentFaculty object
+  if (facultyId in absentFaculty) {
+    const absentDate = absentFaculty[facultyId];
+    const currentDate = new Date();
+    
+    // Reset absence status if it's a different day
+    if (absentDate.getDate() !== currentDate.getDate() ||
+        absentDate.getMonth() !== currentDate.getMonth() ||
+        absentDate.getFullYear() !== currentDate.getFullYear()) {
+      // Reset the absent status
+      delete absentFaculty[facultyId];
+      
+      // Update faculty status in the facultyData array
+      const faculty = facultyData.find(f => f.id === facultyId);
+      if (faculty) {
+        faculty.status = 'available';
+        faculty.substitutedBy = undefined;
+      }
+      
+      // Reset any substitution assignments
+      resetSubstitutions(facultyId);
+      
+      return false;
+    }
+    
+    return true;
+  }
   
-  // Search through all timetables
-  allTimetables.forEach(timetable => {
-    const foundPeriod = timetable.periods.find(p => p.id === periodId);
-    if (foundPeriod) {
-      period = foundPeriod;
+  return false;
+};
+
+// Reset substitutions for a faculty
+const resetSubstitutions = (facultyId: string) => {
+  // Reset substitutions where this faculty was being substituted
+  facultyData.forEach(faculty => {
+    if (faculty.substituting === facultyId) {
+      faculty.status = 'available';
+      faculty.substituting = undefined;
     }
   });
   
-  if (!period) return;
+  // Reset any periods where this faculty was being substituted
+  // In a real app, this would update the database
+};
+
+// Function to find potential substitutes based on various criteria
+export const findPotentialSubstitutes = (period: Period, facultyId: string) => {
+  const faculty = getFacultyById(facultyId);
+  if (!faculty) return [];
   
-  substitutionLog.unshift({
-    id: `sub-fail-${Date.now()}`,
-    date: new Date(),
-    absentFacultyId,
-    substituteId: '', // No substitute found
+  // Filter faculty members who meet our criteria
+  return facultyData.filter(f => {
+    // Skip the current faculty
+    if (f.id === facultyId) return false;
+    
+    // Must be from the same department
+    if (f.department !== faculty.department) return false;
+    
+    // Must be available (not absent or already substituting)
+    if (f.status === 'absent' || f.status === 'substituting') return false;
+    
+    // Must not have their own class at this time
+    const hasConflict = hasPeriodConflict(f.id, period);
+    if (hasConflict) return false;
+    
+    return true;
+  });
+};
+
+// Enhanced assignSubstitute function
+export const assignSubstitute = (periodId: string, facultyId: string) => {
+  const period = getAllPeriods().find(p => p.id === periodId);
+  if (!period) {
+    return { 
+      success: false, 
+      message: "Period not found" 
+    };
+  }
+  
+  // Check if this is today's class
+  const todayDay = getTodayDay();
+  if (period.day !== todayDay) {
+    return { 
+      success: false, 
+      message: "Substitution is only available for today's classes" 
+    };
+  }
+  
+  // Find faculty by ID
+  const faculty = getFacultyById(facultyId);
+  if (!faculty) {
+    return { 
+      success: false, 
+      message: "Faculty not found" 
+    };
+  }
+  
+  // Find potential substitutes
+  const potentialSubstitutes = findPotentialSubstitutes(period, facultyId);
+  
+  if (potentialSubstitutes.length === 0) {
+    return { 
+      success: false, 
+      message: "No eligible substitutes available who match department and availability criteria"
+    };
+  }
+  
+  // Score each substitute based on various factors
+  const scoredSubstitutes = potentialSubstitutes.map(sub => {
+    let score = 0;
+    
+    // Check if substitute teaches same semester
+    const subPeriods = getFacultyTimetable(sub.id);
+    const teachesSameSemester = subPeriods.some(p => p.semester === period.semester);
+    if (teachesSameSemester) score += 3;
+    
+    // Check if substitute teaches same or similar subject
+    const teachesRelatedSubject = subPeriods.some(p => 
+      p.courseCode === period.courseCode || 
+      p.courseCode.substring(0, 3) === period.courseCode.substring(0, 3)
+    );
+    if (teachesRelatedSubject) score += 5;
+    
+    return { faculty: sub, score };
+  });
+  
+  // Sort by score, highest first
+  scoredSubstitutes.sort((a, b) => b.score - a.score);
+  
+  // Get top substitutes
+  const bestSubstitutes = scoredSubstitutes.slice(0, 3).map(s => s.faculty);
+  
+  if (bestSubstitutes.length > 0) {
+    // Generate reason based on criteria
+    let reason = "Substitutes selected based on:";
+    reason += "\n• Same department";
+    reason += "\n• Available during this time slot";
+    
+    // Check if any teach the same semester
+    const anySameSemester = bestSubstitutes.some(sub => {
+      const subPeriods = getFacultyTimetable(sub.id);
+      return subPeriods.some(p => p.semester === period.semester);
+    });
+    
+    if (anySameSemester) {
+      reason += "\n• Experience teaching the same semester";
+    }
+    
+    // Check if any teach related subjects
+    const anyRelatedSubjects = bestSubstitutes.some(sub => {
+      const subPeriods = getFacultyTimetable(sub.id);
+      return subPeriods.some(p => 
+        p.courseCode === period.courseCode || 
+        p.courseCode.substring(0, 3) === period.courseCode.substring(0, 3)
+      );
+    });
+    
+    if (anyRelatedSubjects) {
+      reason += "\n• Experience with the same or related subjects";
+    }
+    
+    return { 
+      success: true, 
+      substitutes: bestSubstitutes,
+      reason
+    };
+  }
+  
+  return { 
+    success: false, 
+    message: "No suitable substitutes found who meet all criteria"
+  };
+};
+
+// Function to check if a faculty has a period conflict
+const hasPeriodConflict = (facultyId: string, period: Period): boolean => {
+  const facultyPeriods = getFacultyTimetable(facultyId);
+  
+  // Only check for conflicts on the same day
+  return facultyPeriods.some(p => 
+    p.day === period.day && 
+    ((p.startTime <= period.startTime && p.endTime > period.startTime) || 
+     (p.startTime < period.endTime && p.endTime >= period.endTime) ||
+     (p.startTime >= period.startTime && p.endTime <= period.endTime))
+  );
+};
+
+// Helper function to get faculty by ID
+export const getFacultyById = (id: string): Faculty | undefined => {
+  return facultyData.find(faculty => faculty.id === id);
+};
+
+// Helper function to get student by ID
+export const getStudentById = (id: string): Student | undefined => {
+  return studentData.find(student => student.id === id);
+};
+
+// Helper function to get user by username and password
+export const getUserByCredentials = (username: string, password: string): User | undefined => {
+  return userData.find(user => user.username === username && user.password === password);
+};
+
+// Helper function to get faculty timetable
+export const getFacultyTimetable = (facultyId: string): Period[] => {
+  return timetableData.filter(period => period.facultyId === facultyId);
+};
+
+// Helper function to get student timetable based on semester and department
+export const getStudentTimetable = (semester: Semester, department: string): Period[] => {
+  return timetableData.filter(period => 
+    period.semester === semester && 
+    period.department === department
+  );
+};
+
+// Helper function to get all periods
+export const getAllPeriods = (): Period[] => {
+  return [...timetableData];
+};
+
+// Helper function to get today's day
+export const getTodayDay = (): Day => {
+  const days: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const today = new Date().getDay();
+  // Convert from 0-6 (Sunday-Saturday) to our Day type
+  // If it's weekend, return Monday
+  return today === 0 || today === 6 ? 'Monday' : days[today - 1];
+};
+
+// Helper function to get faculty status counts
+export const getFacultyStatusCounts = (): StatusCount => {
+  return facultyData.reduce((counts, faculty) => {
+    counts[faculty.status]++;
+    return counts;
+  }, {
+    available: 0,
+    absent: 0,
+    substituting: 0,
+    substituted: 0
+  } as StatusCount);
+};
+
+// Helper function to add a new period
+export const addPeriod = (period: Omit<Period, 'id'>): Period => {
+  const newPeriod = {
+    ...period,
+    id: uuidv4()
+  };
+  
+  timetableData.push(newPeriod);
+  return newPeriod;
+};
+
+// Helper function to update a period
+export const updatePeriod = (periodId: string, updatedPeriod: Partial<Period>): Period | null => {
+  const index = timetableData.findIndex(p => p.id === periodId);
+  if (index === -1) return null;
+  
+  timetableData[index] = {
+    ...timetableData[index],
+    ...updatedPeriod
+  };
+  
+  return timetableData[index];
+};
+
+// Helper function to delete a period
+export const deletePeriod = (periodId: string): boolean => {
+  const index = timetableData.findIndex(p => p.id === periodId);
+  if (index === -1) return false;
+  
+  timetableData.splice(index, 1);
+  return true;
+};
+
+// Helper function to log a substitution failure
+export const logSubstitutionFailure = (facultyId: string, periodId: string, reason: string): void => {
+  const faculty = getFacultyById(facultyId);
+  const period = getAllPeriods().find(p => p.id === periodId);
+  
+  if (!faculty || !period) return;
+  
+  substitutionLog.push({
+    id: uuidv4(),
+    absentFacultyId: facultyId,
+    absentFacultyName: faculty.name,
     periodId,
     course: `${period.courseCode} - ${period.courseTitle}`,
     day: period.day,
-    timeSlot: `${period.startTime}-${period.endTime}`,
+    timeSlot: `${period.startTime} - ${period.endTime}`,
+    date: new Date(),
     success: false,
     reason
   });
-  
-  // Limit log size
-  if (substitutionLog.length > 100) {
-    substitutionLog.pop();
-  }
 };
 
-// Get the substitution log
+// Helper function to get substitution log
 export const getSubstitutionLog = () => {
-  return substitutionLog.map(entry => {
-    const absentFaculty = getFacultyById(entry.absentFacultyId);
-    const substitute = entry.substituteId ? getFacultyById(entry.substituteId) : null;
-    
-    return {
-      ...entry,
-      absentFacultyName: absentFaculty?.name || 'Unknown',
-      substituteName: substitute?.name || 'Not assigned',
-      departmentName: absentFaculty?.department || 'Unknown'
-    };
-  }).sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by most recent
+  return [...substitutionLog].sort((a, b) => b.date.getTime() - a.date.getTime());
 };
 
-// Add a new faculty member
-export const addFaculty = (faculty: Omit<Faculty, 'id'>) => {
-  const newId = `fac-${String(facultyData.length + 1).padStart(3, '0')}`;
-  const newFaculty = { ...faculty, id: newId };
-  facultyData.push(newFaculty);
-  
-  // Add corresponding user
-  userData.push({
-    id: `user-${newId}`,
-    username: faculty.username,
-    password: faculty.password,
-    role: "faculty",
-    facultyId: newId
-  });
-  
-  return newFaculty;
-};
-
-// Add a new student
-export const addStudent = (student: Omit<Student, 'id'>) => {
-  const newId = `std-${String(studentData.length + 1).padStart(3, '0')}`;
-  const newStudent = { ...student, id: newId };
-  studentData.push(newStudent);
-  
-  // Add corresponding user
-  userData.push({
-    id: `user-${newId}`,
-    username: student.username,
-    password: student.password,
-    role: "student",
-    studentId: newId
-  });
-  
-  return newStudent;
-};
-
-// Remove a faculty member
-export const removeFaculty = (id: string) => {
-  const index = facultyData.findIndex(f => f.id === id);
-  if (index >= 0) {
-    facultyData.splice(index, 1);
-    
-    // Remove from cached timetables
-    if (allTimetables[id]) {
-      delete allTimetables[id];
-    }
-    
-    // Remove corresponding user
-    const userIndex = userData.findIndex(u => u.facultyId === id);
-    if (userIndex >= 0) {
-      userData.splice(userIndex, 1);
-    }
-    
-    return true;
-  }
-  return false;
-};
-
-// Remove a student
-export const removeStudent = (id: string) => {
-  const index = studentData.findIndex(s => s.id === id);
-  if (index >= 0) {
-    studentData.splice(index, 1);
-    
-    // Remove corresponding user
-    const userIndex = userData.findIndex(u => u.studentId === id);
-    if (userIndex >= 0) {
-      userData.splice(userIndex, 1);
-    }
-    
-    return true;
-  }
-  return false;
-};
-
-// Update a student
-export const updateStudent = (id: string, data: Partial<Student>) => {
-  const studentIndex = studentData.findIndex(s => s.id === id);
-  
-  if (studentIndex >= 0) {
-    studentData[studentIndex] = {
-      ...studentData[studentIndex],
-      ...data
-    };
-    
-    // Update user if username/password changed
-    if (data.username || data.password) {
-      const userIndex = userData.findIndex(u => u.studentId === id);
-      if (userIndex >= 0) {
-        userData[userIndex] = {
-          ...userData[userIndex],
-          username: data.username || userData[userIndex].username,
-          password: data.password || userData[userIndex].password
-        };
-      }
-    }
-    
-    return studentData[studentIndex];
-  }
-  
-  return null;
-};
-
-// Function to simulate semester progression (to be called every 6 months)
-export const updateStudentSemesters = () => {
-  studentData.forEach((student, index) => {
-    studentData[index].semester = getNextSemester(student.semester);
-  });
-  
-  return studentData;
+// Helper function to get faculty by role
+export const getFacultyByRole = (role: UserRole): Faculty[] => {
+  if (role !== 'faculty') return [];
+  return [...facultyData];
 };

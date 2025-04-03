@@ -79,6 +79,19 @@
   .mobile-card {
     @apply p-4 rounded-lg shadow-sm border border-gray-200;
   }
+  
+  /* Custom alert styles for substitution dialogs */
+  .substitute-error-alert {
+    @apply bg-rose-50 border-rose-200 text-rose-800;
+  }
+  
+  .substitute-success-alert {
+    @apply bg-teal-50 border-teal-200 text-teal-800;
+  }
+  
+  .substitute-info-alert {
+    @apply bg-blue-50 border-blue-200 text-blue-800;
+  }
 }
 
 /* Remove transparency from dropdowns and notifications */
